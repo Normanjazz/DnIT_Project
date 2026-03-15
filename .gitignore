@@ -26,3 +26,5 @@ staticfiles/
 *.xlsx
 files/
 DnIT_Files/
+
+App Specification.md
