@@ -1,0 +1,9 @@
+# requirements.txt
+Django>=5.1,<5.2
+psycopg2-binary>=2.9
+python-decouple>=3.8
+dj-database-url>=2.1
+docxtpl>=0.16
+openpyxl>=3.1
+waitress>=3.0
+django-htmx>=1.17

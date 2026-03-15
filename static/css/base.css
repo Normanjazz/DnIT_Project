@@ -1,0 +1,41 @@
+/* Базовые стили приложения */
+
+:root {
+    --primary-color: #0d6efd;
+    --success-color: #198754;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+}
+
+body {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+
+/* Карточки */
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Таблицы */
+.table-container {
+    overflow-x: auto;
+}
+
+.table-full-width {
+    width: 100%;
+}
+
+/* Утилиты */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.htmx-indicator {
+    display: none;
+}
+
+.htmx-request .htmx-indicator {
+    display: inline-block;
+}

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная - ДНиТ. Управление{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- ГК -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-building display-1 text-primary mb-3"></i>
+                <h3 class="card-title">ГК</h3>
+                <p class="card-text">Группа компаний</p>
+                <a href="{% url 'bills:gc_list' %}" class="btn btn-primary">
+                    <i class="bi bi-arrow-right me-1"></i>Реестр счетов
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ЧОУ -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-mortarboard display-1 text-success mb-3"></i>
+                <h3 class="card-title">ЧОУ</h3>
+                <p class="card-text">Частное образовательное учреждение</p>
+                <a href="{% url 'bills:chou_list' %}" class="btn btn-success">
+                    <i class="bi bi-arrow-right me-1"></i>Реестр счетов
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Справочники -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-journal-text display-1 text-purple mb-3"></i>
+                <h3 class="card-title">Справочники</h3>
+                <p class="card-text">Виды работ, контрагенты, договоры</p>
+                <a href="{% url 'directories:worktype_list' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-right me-1"></i>Открыть
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Протоколы (заглушка) -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5><i class="bi bi-exclamation-triangle text-warning me-2"></i>Протоколы и удостоверения</h5>
+                <p class="mb-0 text-muted">Функционал в разработке. Будет доступен в версии 2.0</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
