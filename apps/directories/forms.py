@@ -202,3 +202,91 @@ class CounterpartyForm(forms.ModelForm):
             raise forms.ValidationError('КПП должен содержать 9 или 15 символов.')
         
         return kpp
+    
+
+class ContractForm(forms.ModelForm):
+    """
+    Форма для создания/редактирования договора.
+    Наследуется от ModelForm для автоматического создания полей.
+    
+    ВАЖНО: Counterparty выбирается через модальное окно (HTMX),
+    а не через стандартный Select.
+    """
+    
+    # Поле для отображения названия контрагента (readonly)
+    counterparty_display = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'readonly': 'readonly',
+            'placeholder': 'Нажмите "Выбрать" для поиска контрагента'
+        }),
+        label="Контрагент"
+    )
+    
+    class Meta:
+        model = Contract
+        fields = ['number', 'date', 'counterparty']  # counterparty - скрытое поле
+        widgets = {
+            'number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Введите номер договора (например: 12-А)'
+            }),
+            'date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'  # HTML5 date picker
+            }),
+            # СКРЫТОЕ ПОЛЕ для ID контрагента
+            'counterparty': forms.HiddenInput(attrs={
+                'id': 'counterparty-id'  # Важно для JavaScript
+            }),
+        }
+        labels = {
+            'number': 'Номер договора',
+            'date': 'Дата договора',
+            'counterparty': 'Контрагент',
+        }
+    
+    def __init__(self, *args, **kwargs):
+        """
+        Инициализация формы.
+        Заполняем counterparty_display текущим значением при редактировании.
+        """
+        super().__init__(*args, **kwargs)
+        
+        # Если редактируем существующий объект, заполняем отображаемое поле
+        if self.instance.pk and self.instance.counterparty:
+            self.fields['counterparty_display'].initial = self.instance.counterparty.name
+    
+    def clean(self):
+        """
+        Кросс-полевая валидация уникальности пары номер+дата.
+        """
+        cleaned_data = super().clean()
+        number = cleaned_data.get('number')
+        date = cleaned_data.get('date')
+        
+        # Если есть ошибки в отдельных полях, не проверяем уникальность
+        if not number or not date:
+            return cleaned_data
+        
+        # Проверяем уникальность пары номер+дата
+        if self.instance.pk:
+            # Редактирование: исключаем текущий объект
+            exists = Contract.objects.filter(
+                number=number,
+                date=date
+            ).exclude(pk=self.instance.pk).exists()
+        else:
+            # Создание: проверяем все записи
+            exists = Contract.objects.filter(
+                number=number,
+                date=date
+            ).exists()
+        
+        if exists:
+            raise forms.ValidationError(
+                'Договор с таким номером и датой уже существует.'
+            )
+        
+        return cleaned_data
