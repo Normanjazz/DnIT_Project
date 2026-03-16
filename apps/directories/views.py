@@ -500,33 +500,127 @@ def contract_delete(request, pk):
 
 
 # =============================================================================
-# ResponsiblePerson (Ответственные лица) - STUB Views
+# ResponsiblePerson (Ответственные лица) - CRUD Views
 # =============================================================================
 
 @login_required
 def responsible_person_list(request):
-    """Заглушка: Список ответственных лиц"""
-    return render(request, 'directories/responsible_person_list.html', {'page_title': 'Ответственные лица'})
+    """
+    Список ответственных лиц с поиском и фильтрацией.
+    """
+    # Получаем все неархивированные ответственные лица
+    persons = ResponsiblePerson.objects.all().order_by('last_name', 'first_name')
+    
+    # Поиск по фамилии, имени или должности
+    search_query = request.GET.get('q', '')
+    if search_query:
+        persons = persons.filter(
+            Q(last_name__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(position__icontains=search_query)
+        )
+    
+    context = {
+        'persons': persons,
+        'search_query': search_query,
+        'page_title': 'Ответственные лица',
+    }
+    
+    return render(request, 'directories/responsible_person_list.html', context)
+
 
 @login_required
 def responsible_person_create(request):
-    """Заглушка: Создание ответственного лица"""
-    return render(request, 'directories/responsible_person_form.html', {'page_title': 'Создать ответственное лицо'})
+    """
+    Создание нового ответственного лица.
+    """
+    form = ResponsiblePersonForm(request.POST or None)
+    
+    if request.method == 'POST':
+        if form.is_valid():
+            # Сохраняем объект, но не коммитим в БД сразу
+            person = form.save(commit=False)
+            person.created_by = request.user  # Запоминаем кто создал
+            person.save()
+            
+            # Сообщение об успехе
+            messages.success(request, f'Ответственное лицо "{person}" успешно создано!')
+            
+            # Перенаправляем на список
+            return redirect('directories:responsible_person_list')
+    
+    context = {
+        'form': form,
+        'page_title': 'Создать ответственное лицо',
+        'action': 'create',
+    }
+    
+    return render(request, 'directories/responsible_person_form.html', context)
+
 
 @login_required
 def responsible_person_detail(request, pk):
-    """Заглушка: Просмотр ответственного лица"""
-    return render(request, 'directories/responsible_person_detail.html', {'page_title': 'Ответственное лицо'})
+    """
+    Просмотр деталей ответственного лица.
+    """
+    person = get_object_or_404(ResponsiblePerson, pk=pk)
+    
+    context = {
+        'person': person,
+        'page_title': 'Просмотр ответственного лица',
+    }
+    
+    return render(request, 'directories/responsible_person_detail.html', context)
+
 
 @login_required
 def responsible_person_update(request, pk):
-    """Заглушка: Редактирование ответственного лица"""
-    return render(request, 'directories/responsible_person_form.html', {'page_title': 'Редактировать ответственное лицо'})
+    """
+    Редактирование ответственного лица.
+    """
+    # Получаем объект или 404
+    person = get_object_or_404(ResponsiblePerson, pk=pk)
+    
+    form = ResponsiblePersonForm(request.POST or None, instance=person)
+    
+    if request.method == 'POST':
+        if form.is_valid():
+            person = form.save(commit=False)
+            person.created_by = request.user  # Обновляем кто изменил
+            person.save()
+            
+            messages.success(request, f'Ответственное лицо "{person}" успешно обновлено!')
+            return redirect('directories:responsible_person_list')
+    
+    context = {
+        'form': form,
+        'person': person,
+        'page_title': 'Редактировать ответственное лицо',
+        'action': 'update',
+    }
+    
+    return render(request, 'directories/responsible_person_form.html', context)
+
 
 @login_required
 def responsible_person_delete(request, pk):
-    """Заглушка: Удаление ответственного лица"""
-    return render(request, 'directories/responsible_person_confirm_delete.html', {'page_title': 'Удалить ответственное лицо'})
+    """
+    Мягкое удаление ответственного лица (soft delete).
+    """
+    person = get_object_or_404(ResponsiblePerson, pk=pk)
+    
+    if request.method == 'POST':
+        person.archive()  # Мягкое удаление через метод модели
+        
+        messages.success(request, f'Ответственное лицо "{person}" успешно удалено!')
+        return redirect('directories:responsible_person_list')
+    
+    context = {
+        'person': person,
+        'page_title': 'Удалить ответственное лицо',
+    }
+    
+    return render(request, 'directories/responsible_person_confirm_delete.html', context)
 
 
 # =============================================================================
