@@ -136,3 +136,46 @@ class Contract(BaseModel):
     
     def __str__(self):
         return f"{self.number} от {self.date.strftime('%d.%m.%Y')}"
+    
+
+class ResponsiblePerson(BaseModel):
+    """
+    Справочник ответственных лиц.
+    Используется в доверенностях для указания кому выдана доверенность.
+    """
+    
+    last_name = models.CharField(
+        max_length=100,
+        verbose_name="Фамилия"
+    )
+    
+    first_name = models.CharField(
+        max_length=100,
+        verbose_name="Имя"
+    )
+    
+    middle_name = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="Отчество"
+    )
+    
+    position = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name="Должность"
+    )
+    
+    class Meta:
+        verbose_name = "Ответственное лицо"
+        verbose_name_plural = "Ответственные лица"
+        ordering = ['last_name', 'first_name']
+        indexes = [
+            models.Index(fields=['last_name', 'first_name']),
+        ]
+    
+    def __str__(self):
+        full_name = f"{self.last_name} {self.first_name}"
+        if self.middle_name:
+            full_name += f" {self.middle_name}"
+        return full_name

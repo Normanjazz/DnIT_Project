@@ -17,18 +17,14 @@ from apps.core.models import BaseModel
 
 # --------- Вставляем код от QWEN ----------------------
 
-from apps.directories.models import Contract, Counterparty
+from apps.directories.models import ResponsiblePerson, Contract
 
 # Проверяем поля
-print("✅ Поля Contract:")
-for field in Contract._meta.get_fields():
-    if field.name in ['number', 'date', 'counterparty', 'is_archived']:
+print("✅ Поля ResponsiblePerson:")
+for field in ResponsiblePerson._meta.get_fields():
+    if field.name in ['last_name', 'first_name', 'middle_name', 'position', 'is_archived']:
         print(f"  - {field.name} ({field.__class__.__name__})")
 
-# Проверяем связь
-print("\n✅ Связь с Counterparty:")
-print(f"  - counterparty ({Contract._meta.get_field('counterparty').__class__.__name__})")
-
-# Проверяем unique_together
-print("\n✅ Уникальность:")
-print(f"  - {Contract._meta.unique_together}")
+# Проверяем __str__
+print("\n✅ Проверка __str__:")
+print(f"  - Метод __str__ определён: {hasattr(ResponsiblePerson, '__str__')}")
