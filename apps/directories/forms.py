@@ -51,3 +51,51 @@ class WorkTypeForm(forms.ModelForm):
             raise forms.ValidationError('Вид работ с таким наименованием уже существует.')
         
         return full_name
+    
+
+class UnitForm(forms.ModelForm):
+    """
+    Форма для создания/редактирования единицы измерения.
+    Наследуется от ModelForm для автоматического создания полей.
+    """
+    
+    class Meta:
+        model = Unit
+        fields = ['full_name', 'short_name']  # Поля, которые будут в форме
+        widgets = {
+            'full_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Введите полное наименование (например: Метр)'
+            }),
+            'short_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Введите сокращение (например: м)'
+            }),
+        }
+        labels = {
+            'full_name': 'Полное наименование',
+            'short_name': 'Сокращённое наименование',
+        }
+    
+    def clean_full_name(self):
+        """
+        Валидация уникальности полного наименования.
+        Проверяет, что нет другой единицы измерения с таким же именем.
+        """
+        full_name = self.cleaned_data.get('full_name')
+        
+        # Если редактируем существующий объект, исключаем его из проверки
+        if self.instance.pk:
+            exists = Unit.objects.filter(
+                full_name__iexact=full_name
+            ).exclude(pk=self.instance.pk).exists()
+        else:
+            # Если создаём новый, проверяем все записи
+            exists = Unit.objects.filter(
+                full_name__iexact=full_name
+            ).exists()
+        
+        if exists:
+            raise forms.ValidationError('Единица измерения с таким наименованием уже существует.')
+        
+        return full_name
