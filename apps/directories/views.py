@@ -130,33 +130,126 @@ def work_type_delete(request, pk):
     return render(request, 'directories/work_type_confirm_delete.html', context)
 
 # =============================================================================
-# Unit (Единицы измерения) - STUB Views
+# Unit (Единицы измерения) - CRUD Views
 # =============================================================================
 
 @login_required
 def unit_list(request):
-    """Заглушка: Список единиц измерения"""
-    return render(request, 'directories/unit_list.html', {'page_title': 'Единицы измерения'})
+    """
+    Список единиц измерения с поиском и фильтрацией.
+    """
+    # Получаем все неархивированные единицы измерения
+    units = Unit.objects.all().order_by('full_name')
+    
+    # Поиск по полному или сокращённому наименованию
+    search_query = request.GET.get('q', '')
+    if search_query:
+        units = units.filter(
+            Q(full_name__icontains=search_query) |
+            Q(short_name__icontains=search_query)
+        )
+    
+    context = {
+        'units': units,
+        'search_query': search_query,
+        'page_title': 'Единицы измерения',
+    }
+    
+    return render(request, 'directories/unit_list.html', context)
+
 
 @login_required
 def unit_create(request):
-    """Заглушка: Создание единицы измерения"""
-    return render(request, 'directories/unit_form.html', {'page_title': 'Создать единицу измерения'})
+    """
+    Создание новой единицы измерения.
+    """
+    form = UnitForm(request.POST or None)
+    
+    if request.method == 'POST':
+        if form.is_valid():
+            # Сохраняем объект, но не коммитим в БД сразу
+            unit = form.save(commit=False)
+            unit.created_by = request.user  # Запоминаем кто создал
+            unit.save()
+            
+            # Сообщение об успехе
+            messages.success(request, f'Единица измерения "{unit.full_name}" успешно создана!')
+            
+            # Перенаправляем на список
+            return redirect('directories:unit_list')
+    
+    context = {
+        'form': form,
+        'page_title': 'Создать единицу измерения',
+        'action': 'create',
+    }
+    
+    return render(request, 'directories/unit_form.html', context)
+
 
 @login_required
 def unit_detail(request, pk):
-    """Заглушка: Просмотр единицы измерения"""
-    return render(request, 'directories/unit_detail.html', {'page_title': 'Единица измерения'})
+    """
+    Просмотр деталей единицы измерения.
+    """
+    unit = get_object_or_404(Unit, pk=pk)
+    
+    context = {
+        'unit': unit,
+        'page_title': 'Просмотр единицы измерения',
+    }
+    
+    return render(request, 'directories/unit_detail.html', context)
+
 
 @login_required
 def unit_update(request, pk):
-    """Заглушка: Редактирование единицы измерения"""
-    return render(request, 'directories/unit_form.html', {'page_title': 'Редактировать единицу измерения'})
+    """
+    Редактирование единицы измерения.
+    """
+    # Получаем объект или 404
+    unit = get_object_or_404(Unit, pk=pk)
+    
+    form = UnitForm(request.POST or None, instance=unit)
+    
+    if request.method == 'POST':
+        if form.is_valid():
+            unit = form.save(commit=False)
+            unit.created_by = request.user  # Обновляем кто изменил
+            unit.save()
+            
+            messages.success(request, f'Единица измерения "{unit.full_name}" успешно обновлена!')
+            return redirect('directories:unit_list')
+    
+    context = {
+        'form': form,
+        'unit': unit,
+        'page_title': 'Редактировать единицу измерения',
+        'action': 'update',
+    }
+    
+    return render(request, 'directories/unit_form.html', context)
+
 
 @login_required
 def unit_delete(request, pk):
-    """Заглушка: Удаление единицы измерения"""
-    return render(request, 'directories/unit_confirm_delete.html', {'page_title': 'Удалить единицу измерения'})
+    """
+    Мягкое удаление единицы измерения (soft delete).
+    """
+    unit = get_object_or_404(Unit, pk=pk)
+    
+    if request.method == 'POST':
+        unit.archive()  # Мягкое удаление через метод модели
+        
+        messages.success(request, f'Единица измерения "{unit.full_name}" успешно удалена!')
+        return redirect('directories:unit_list')
+    
+    context = {
+        'unit': unit,
+        'page_title': 'Удалить единицу измерения',
+    }
+    
+    return render(request, 'directories/unit_confirm_delete.html', context)
 
 
 # =============================================================================
