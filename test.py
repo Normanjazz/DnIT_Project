@@ -17,21 +17,18 @@ from apps.core.models import BaseModel
 
 # --------- Вставляем код от QWEN ----------------------
 
-from apps.directories.models import Counterparty, WorkType, Unit
+from apps.directories.models import Contract, Counterparty
 
-# Проверяем, что все три модели импортируются
-print("✅ Модели справочников:")
-print(f"  - {WorkType._meta.verbose_name}")
-print(f"  - {Unit._meta.verbose_name}")
-print(f"  - {Counterparty._meta.verbose_name}")
+# Проверяем поля
+print("✅ Поля Contract:")
+for field in Contract._meta.get_fields():
+    if field.name in ['number', 'date', 'counterparty', 'is_archived']:
+        print(f"  - {field.name} ({field.__class__.__name__})")
 
-# Проверяем поля Counterparty
-print("\n✅ Поля Counterparty:")
-for field in Counterparty._meta.get_fields():
-    if field.name in ['name', 'inn', 'kpp', 'email', 'phone', 'is_archived']:
-        print(f"  - {field.name}")
+# Проверяем связь
+print("\n✅ Связь с Counterparty:")
+print(f"  - counterparty ({Contract._meta.get_field('counterparty').__class__.__name__})")
 
-# Проверяем индексы
-print("\n✅ Индексы:")
-for index in Counterparty._meta.indexes:
-    print(f"  - {index.fields}")
+# Проверяем unique_together
+print("\n✅ Уникальность:")
+print(f"  - {Contract._meta.unique_together}")

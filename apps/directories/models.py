@@ -100,3 +100,39 @@ class Counterparty(BaseModel):
     
     def __str__(self):
         return self.name
+    
+
+class Contract(BaseModel):
+    """
+    Справочник договоров. Связан с контрагентом (один ко многим).
+    """
+
+    number = models.CharField(
+        max_length=50,
+        verbose_name="Номер договора"
+    )    
+
+    date = models.DateField(
+        verbose_name="Дата договора"
+    )
+
+    # Связь с контрагентом
+    counterparty = models.ForeignKey(
+        Counterparty,
+        on_delete=models.PROTECT,  # Нельзя удалить контрагента, если есть договоры
+        related_name='contracts',  # Доступ через counterparty.contracts.all()
+        verbose_name="Контрагент"
+    )
+    
+    class Meta:
+        verbose_name = "Договор"
+        verbose_name_plural = "Договоры"
+        ordering = ['-date', ]
+        unique_together = ['number', 'date']  # Уникальность пары номер+дата
+        indexes = [
+            models.Index(fields=['number']),
+            models.Index(fields=['date']),
+        ]
+    
+    def __str__(self):
+        return f"{self.number} от {self.date.strftime('%d.%m.%Y')}"
