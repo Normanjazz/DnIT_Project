@@ -1,0 +1,130 @@
+{# apps/directories/templates/directories/work_type_detail.html #}
+{% extends 'base.html' %}
+
+{% block title %}{{ work_type.full_name }} - ДНиТ. Управление. Астрахань{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Заголовок страницы -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="bi bi-tools me-2"></i>{{ page_title }}
+            </h1>
+            <nav aria-label="breadcrumb" class="mt-2">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'directories:work_type_list' %}">Виды работ</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ work_type.full_name|truncatechars:30 }}</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a href="{% url 'directories:work_type_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Назад к списку
+            </a>
+        </div>
+    </div>
+
+    <!-- Карточка с информацией -->
+    <div class="card shadow-sm border-0" style="max-width: 800px;">
+        <!-- Статус архива -->
+        {% if work_type.is_archived %}
+        <div class="card-header bg-secondary text-white py-3">
+            <h6 class="m-0">
+                <i class="bi bi-archive me-2"></i>Архивировано
+            </h6>
+        </div>
+        {% else %}
+        <div class="card-header bg-white py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="bi bi-info-circle me-2"></i>Информация о виде работ
+            </h6>
+        </div>
+        {% endif %}
+
+        <div class="card-body">
+            <!-- Основные поля -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="text-muted small text-uppercase">ID</label>
+                        <p class="mb-0 fw-bold">{{ work_type.id }}</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="text-muted small text-uppercase">Статус</label>
+                        <p class="mb-0">
+                            {% if work_type.is_archived %}
+                                <span class="badge bg-secondary"><i class="bi bi-archive me-1"></i>Архив</span>
+                            {% else %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Активен</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Полное наименование -->
+            <div class="mb-4">
+                <label class="text-muted small text-uppercase">Полное наименование</label>
+                <p class="mb-0 fs-5">{{ work_type.full_name }}</p>
+            </div>
+
+            <!-- Сокращённое наименование -->
+            <div class="mb-4">
+                <label class="text-muted small text-uppercase">Сокращённое наименование</label>
+                <p class="mb-0 fs-5">{{ work_type.short_name|default:"—" }}</p>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Аудит (создание/изменение) -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="text-muted small text-uppercase">
+                            <i class="bi bi-plus-circle me-1"></i>Создан
+                        </label>
+                        <p class="mb-0">
+                            {{ work_type.created_at|date:"d.m.Y H:i" }}
+                            {% if work_type.created_by %}
+                                <br><small class="text-muted">Пользователь: {{ work_type.created_by.username }}</small>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="text-muted small text-uppercase">
+                            <i class="bi bi-pencil me-1"></i>Изменён
+                        </label>
+                        <p class="mb-0">
+                            {{ work_type.updated_at|date:"d.m.Y H:i" }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Кнопки действий -->
+        <div class="card-footer bg-white py-3">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <a href="{% url 'directories:work_type_update' work_type.pk %}" class="btn btn-primary">
+                        <i class="bi bi-pencil me-1"></i>Редактировать
+                    </a>
+                </div>
+                <div>
+                    <a href="{% url 'directories:work_type_delete' work_type.pk %}" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Удалить
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
