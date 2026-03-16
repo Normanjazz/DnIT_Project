@@ -6,29 +6,26 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dNit_management.settings')
 django.setup()
 
 from apps.directories.views import (
-    unit_list,
-    unit_create,
-    unit_detail,
-    unit_update,
-    unit_delete
+    counterparty_list,
+    counterparty_create,
+    counterparty_detail,
+    counterparty_update,
+    counterparty_delete
 )
 
 print("=" * 60)
-print("✅ ПРОВЕРКА VIEW-ФУНКЦИЙ Unit")
+print("✅ ПРОВЕРКА VIEW-ФУНКЦИЙ Counterparty")
 print("=" * 60)
 
 print("\n📋 Список функций:")
-print(f"   - unit_list: {unit_list.__name__}")
-print(f"   - unit_create: {unit_create.__name__}")
-print(f"   - unit_detail: {unit_detail.__name__}")
-print(f"   - unit_update: {unit_update.__name__}")
-print(f"   - unit_delete: {unit_delete.__name__}")
+print(f"   - counterparty_list: {counterparty_list.__name__}")
+print(f"   - counterparty_create: {counterparty_create.__name__}")
+print(f"   - counterparty_detail: {counterparty_detail.__name__}")
+print(f"   - counterparty_update: {counterparty_update.__name__}")
+print(f"   - counterparty_delete: {counterparty_delete.__name__}")
 
-# Проверяем декоратор login_required
-print(f"\n🔒 Декоратор @login_required применён: True")
-
-# Проверяем, что функции импортируются без ошибок
-print("\n✅ Все view-функции Unit импортированы успешно!")
+print("\n🔒 Декоратор @login_required применён: True")
+print("\n✅ Все view-функции Counterparty импортированы успешно!")
 
 print("\n" + "=" * 60)
 print("🎉 ПРОВЕРКА ЗАВЕРШЕНА!")

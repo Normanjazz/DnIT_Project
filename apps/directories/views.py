@@ -253,33 +253,127 @@ def unit_delete(request, pk):
 
 
 # =============================================================================
-# Counterparty (Контрагенты) - STUB Views
+# Counterparty (Контрагенты) - CRUD Views
 # =============================================================================
 
 @login_required
 def counterparty_list(request):
-    """Заглушка: Список контрагентов"""
-    return render(request, 'directories/counterparty_list.html', {'page_title': 'Контрагенты'})
+    """
+    Список контрагентов с поиском и фильтрацией.
+    """
+    # Получаем все неархивированные контрагенты
+    counterparties = Counterparty.objects.all().order_by('name')
+    
+    # Поиск по наименованию, ИНН или email
+    search_query = request.GET.get('q', '')
+    if search_query:
+        counterparties = counterparties.filter(
+            Q(name__icontains=search_query) |
+            Q(inn__icontains=search_query) |
+            Q(email__icontains=search_query)
+        )
+    
+    context = {
+        'counterparties': counterparties,
+        'search_query': search_query,
+        'page_title': 'Контрагенты',
+    }
+    
+    return render(request, 'directories/counterparty_list.html', context)
+
 
 @login_required
 def counterparty_create(request):
-    """Заглушка: Создание контрагента"""
-    return render(request, 'directories/counterparty_form.html', {'page_title': 'Создать контрагента'})
+    """
+    Создание нового контрагента.
+    """
+    form = CounterpartyForm(request.POST or None)
+    
+    if request.method == 'POST':
+        if form.is_valid():
+            # Сохраняем объект, но не коммитим в БД сразу
+            counterparty = form.save(commit=False)
+            counterparty.created_by = request.user  # Запоминаем кто создал
+            counterparty.save()
+            
+            # Сообщение об успехе
+            messages.success(request, f'Контрагент "{counterparty.name}" успешно создан!')
+            
+            # Перенаправляем на список
+            return redirect('directories:counterparty_list')
+    
+    context = {
+        'form': form,
+        'page_title': 'Создать контрагента',
+        'action': 'create',
+    }
+    
+    return render(request, 'directories/counterparty_form.html', context)
+
 
 @login_required
 def counterparty_detail(request, pk):
-    """Заглушка: Просмотр контрагента"""
-    return render(request, 'directories/counterparty_detail.html', {'page_title': 'Контрагент'})
+    """
+    Просмотр деталей контрагента.
+    """
+    counterparty = get_object_or_404(Counterparty, pk=pk)
+    
+    context = {
+        'counterparty': counterparty,
+        'page_title': 'Просмотр контрагента',
+    }
+    
+    return render(request, 'directories/counterparty_detail.html', context)
+
 
 @login_required
 def counterparty_update(request, pk):
-    """Заглушка: Редактирование контрагента"""
-    return render(request, 'directories/counterparty_form.html', {'page_title': 'Редактировать контрагента'})
+    """
+    Редактирование контрагента.
+    """
+    # Получаем объект или 404
+    counterparty = get_object_or_404(Counterparty, pk=pk)
+    
+    form = CounterpartyForm(request.POST or None, instance=counterparty)
+    
+    if request.method == 'POST':
+        if form.is_valid():
+            counterparty = form.save(commit=False)
+            counterparty.created_by = request.user  # Обновляем кто изменил
+            counterparty.save()
+            
+            messages.success(request, f'Контрагент "{counterparty.name}" успешно обновлён!')
+            return redirect('directories:counterparty_list')
+    
+    context = {
+        'form': form,
+        'counterparty': counterparty,
+        'page_title': 'Редактировать контрагента',
+        'action': 'update',
+    }
+    
+    return render(request, 'directories/counterparty_form.html', context)
+
 
 @login_required
 def counterparty_delete(request, pk):
-    """Заглушка: Удаление контрагента"""
-    return render(request, 'directories/counterparty_confirm_delete.html', {'page_title': 'Удалить контрагента'})
+    """
+    Мягкое удаление контрагента (soft delete).
+    """
+    counterparty = get_object_or_404(Counterparty, pk=pk)
+    
+    if request.method == 'POST':
+        counterparty.archive()  # Мягкое удаление через метод модели
+        
+        messages.success(request, f'Контрагент "{counterparty.name}" успешно удалён!')
+        return redirect('directories:counterparty_list')
+    
+    context = {
+        'counterparty': counterparty,
+        'page_title': 'Удалить контрагента',
+    }
+    
+    return render(request, 'directories/counterparty_confirm_delete.html', context)
 
 
 # =============================================================================
