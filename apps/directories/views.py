@@ -624,33 +624,133 @@ def responsible_person_delete(request, pk):
 
 
 # =============================================================================
-# PowerOfAttorney (Доверенности) - STUB Views
+# PowerOfAttorney (Доверенности) - CRUD Views
 # =============================================================================
 
 @login_required
 def power_of_attorney_list(request):
-    """Заглушка: Список доверенностей"""
-    return render(request, 'directories/power_of_attorney_list.html', {'page_title': 'Доверенности'})
+    """
+    Список доверенностей с поиском и фильтрацией.
+    """
+    # Получаем все неархивированные доверенности с связанными лицами
+    powers = PowerOfAttorney.objects.select_related('responsible_person').all().order_by('-date', 'number')
+    
+    # Поиск по номеру или ФИО ответственного лица
+    search_query = request.GET.get('q', '')
+    if search_query:
+        powers = powers.filter(
+            Q(number__icontains=search_query) |
+            Q(responsible_person__last_name__icontains=search_query) |
+            Q(responsible_person__first_name__icontains=search_query)
+        )
+    
+    context = {
+        'powers': powers,
+        'search_query': search_query,
+        'page_title': 'Доверенности',
+    }
+    
+    return render(request, 'directories/power_of_attorney_list.html', context)
+
 
 @login_required
 def power_of_attorney_create(request):
-    """Заглушка: Создание доверенности"""
-    return render(request, 'directories/power_of_attorney_form.html', {'page_title': 'Создать доверенность'})
+    """
+    Создание новой доверенности.
+    """
+    form = PowerOfAttorneyForm(request.POST or None)
+    
+    if request.method == 'POST':
+        if form.is_valid():
+            # Сохраняем объект, но не коммитим в БД сразу
+            power = form.save(commit=False)
+            power.created_by = request.user  # Запоминаем кто создал
+            power.save()
+            
+            # Сообщение об успехе
+            messages.success(request, f'Доверенность "{power.number}" успешно создана!')
+            
+            # Перенаправляем на список
+            return redirect('directories:power_of_attorney_list')
+    
+    context = {
+        'form': form,
+        'page_title': 'Создать доверенность',
+        'action': 'create',
+    }
+    
+    return render(request, 'directories/power_of_attorney_form.html', context)
+
 
 @login_required
 def power_of_attorney_detail(request, pk):
-    """Заглушка: Просмотр доверенности"""
-    return render(request, 'directories/power_of_attorney_detail.html', {'page_title': 'Доверенность'})
+    """
+    Просмотр деталей доверенности.
+    """
+    power = get_object_or_404(
+        PowerOfAttorney.objects.select_related('responsible_person'), 
+        pk=pk
+    )
+    
+    context = {
+        'power': power,
+        'page_title': 'Просмотр доверенности',
+    }
+    
+    return render(request, 'directories/power_of_attorney_detail.html', context)
+
 
 @login_required
 def power_of_attorney_update(request, pk):
-    """Заглушка: Редактирование доверенности"""
-    return render(request, 'directories/power_of_attorney_form.html', {'page_title': 'Редактировать доверенность'})
+    """
+    Редактирование доверенности.
+    """
+    # Получаем объект или 404
+    power = get_object_or_404(
+        PowerOfAttorney.objects.select_related('responsible_person'), 
+        pk=pk
+    )
+    
+    form = PowerOfAttorneyForm(request.POST or None, instance=power)
+    
+    if request.method == 'POST':
+        if form.is_valid():
+            power = form.save(commit=False)
+            power.created_by = request.user  # Обновляем кто изменил
+            power.save()
+            
+            messages.success(request, f'Доверенность "{power.number}" успешно обновлена!')
+            return redirect('directories:power_of_attorney_list')
+    
+    context = {
+        'form': form,
+        'power': power,
+        'page_title': 'Редактировать доверенность',
+        'action': 'update',
+    }
+    
+    return render(request, 'directories/power_of_attorney_form.html', context)
+
 
 @login_required
 def power_of_attorney_delete(request, pk):
-    """Заглушка: Удаление доверенности"""
-    return render(request, 'directories/power_of_attorney_confirm_delete.html', {'page_title': 'Удалить доверенность'})
+    """
+    Мягкое удаление доверенности (soft delete).
+    """
+    power = get_object_or_404(PowerOfAttorney, pk=pk)
+    
+    if request.method == 'POST':
+        power.archive()  # Мягкое удаление через метод модели
+        
+        messages.success(request, f'Доверенность "{power.number}" успешно удалена!')
+        return redirect('directories:power_of_attorney_list')
+    
+    context = {
+        'power': power,
+        'page_title': 'Удалить доверенность',
+    }
+    
+    return render(request, 'directories/power_of_attorney_confirm_delete.html', context)
 
 
 # =============================================================================
