@@ -377,33 +377,126 @@ def counterparty_delete(request, pk):
 
 
 # =============================================================================
-# Contract (Договоры) - STUB Views
+# Contract (Договоры) - CRUD Views
 # =============================================================================
 
 @login_required
 def contract_list(request):
-    """Заглушка: Список договоров"""
-    return render(request, 'directories/contract_list.html', {'page_title': 'Договоры'})
+    """
+    Список договоров с поиском и фильтрацией.
+    """
+    # Получаем все неархивированные договоры с связанными контрагентами
+    contracts = Contract.objects.select_related('counterparty').all().order_by('-date', 'number')
+    
+    # Поиск по номеру или наименованию контрагента
+    search_query = request.GET.get('q', '')
+    if search_query:
+        contracts = contracts.filter(
+            Q(number__icontains=search_query) |
+            Q(counterparty__name__icontains=search_query)
+        )
+    
+    context = {
+        'contracts': contracts,
+        'search_query': search_query,
+        'page_title': 'Договоры',
+    }
+    
+    return render(request, 'directories/contract_list.html', context)
+
 
 @login_required
 def contract_create(request):
-    """Заглушка: Создание договора"""
-    return render(request, 'directories/contract_form.html', {'page_title': 'Создать договор'})
+    """
+    Создание нового договора.
+    """
+    form = ContractForm(request.POST or None)
+    
+    if request.method == 'POST':
+        if form.is_valid():
+            # Сохраняем объект, но не коммитим в БД сразу
+            contract = form.save(commit=False)
+            contract.created_by = request.user  # Запоминаем кто создал
+            contract.save()
+            
+            # Сообщение об успехе
+            messages.success(request, f'Договор "{contract.number}" успешно создан!')
+            
+            # Перенаправляем на список
+            return redirect('directories:contract_list')
+    
+    context = {
+        'form': form,
+        'page_title': 'Создать договор',
+        'action': 'create',
+    }
+    
+    return render(request, 'directories/contract_form.html', context)
+
 
 @login_required
 def contract_detail(request, pk):
-    """Заглушка: Просмотр договора"""
-    return render(request, 'directories/contract_detail.html', {'page_title': 'Договор'})
+    """
+    Просмотр деталей договора.
+    """
+    contract = get_object_or_404(Contract.objects.select_related('counterparty'), pk=pk)
+    
+    context = {
+        'contract': contract,
+        'page_title': 'Просмотр договора',
+    }
+    
+    return render(request, 'directories/contract_detail.html', context)
+
 
 @login_required
 def contract_update(request, pk):
-    """Заглушка: Редактирование договора"""
-    return render(request, 'directories/contract_form.html', {'page_title': 'Редактировать договор'})
+    """
+    Редактирование договора.
+    """
+    # Получаем объект или 404
+    contract = get_object_or_404(Contract.objects.select_related('counterparty'), pk=pk)
+    
+    form = ContractForm(request.POST or None, instance=contract)
+    
+    if request.method == 'POST':
+        if form.is_valid():
+            contract = form.save(commit=False)
+            contract.created_by = request.user  # Обновляем кто изменил
+            contract.save()
+            
+            messages.success(request, f'Договор "{contract.number}" успешно обновлён!')
+            return redirect('directories:contract_list')
+    
+    context = {
+        'form': form,
+        'contract': contract,
+        'page_title': 'Редактировать договор',
+        'action': 'update',
+    }
+    
+    return render(request, 'directories/contract_form.html', context)
+
 
 @login_required
 def contract_delete(request, pk):
-    """Заглушка: Удаление договора"""
-    return render(request, 'directories/contract_confirm_delete.html', {'page_title': 'Удалить договор'})
+    """
+    Мягкое удаление договора (soft delete).
+    """
+    contract = get_object_or_404(Contract, pk=pk)
+    
+    if request.method == 'POST':
+        contract.archive()  # Мягкое удаление через метод модели
+        
+        messages.success(request, f'Договор "{contract.number}" успешно удалён!')
+        return redirect('directories:contract_list')
+    
+    context = {
+        'contract': contract,
+        'page_title': 'Удалить договор',
+    }
+    
+    return render(request, 'directories/contract_confirm_delete.html', context)
 
 
 # =============================================================================
