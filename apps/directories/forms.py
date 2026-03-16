@@ -363,3 +363,92 @@ class ResponsiblePersonForm(forms.ModelForm):
         return cleaned_data
     
 
+class PowerOfAttorneyForm(forms.ModelForm):
+    """
+    Форма для создания/редактирования доверенности.
+    Наследуется от ModelForm для автоматического создания полей.
+    
+    ВАЖНО: ResponsiblePerson выбирается через модальное окно (HTMX),
+    а не через стандартный Select.
+    """
+    
+    # Поле для отображения ФИО ответственного лица (readonly)
+    responsible_person_display = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'readonly': 'readonly',
+            'placeholder': 'Нажмите "Выбрать" для поиска ответственного лица'
+        }),
+        label="Ответственное лицо"
+    )
+    
+    class Meta:
+        model = PowerOfAttorney
+        fields = ['number', 'date', 'responsible_person']  # responsible_person - скрытое поле
+        widgets = {
+            'number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Введите номер доверенности (например: 123)'
+            }),
+            'date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'  # HTML5 date picker
+            }),
+            # СКРЫТОЕ ПОЛЕ для ID ответственного лица
+            'responsible_person': forms.HiddenInput(attrs={
+                'id': 'responsible-person-id'  # Важно для JavaScript
+            }),
+        }
+        labels = {
+            'number': 'Номер доверенности',
+            'date': 'Дата доверенности',
+            'responsible_person': 'Ответственное лицо',
+        }
+    
+    def __init__(self, *args, **kwargs):
+        """
+        Инициализация формы.
+        Заполняем responsible_person_display текущим значением при редактировании.
+        """
+        super().__init__(*args, **kwargs)
+        
+        # Если редактируем существующий объект, заполняем отображаемое поле
+        if self.instance.pk and self.instance.responsible_person:
+            self.fields['responsible_person_display'].initial = str(self.instance.responsible_person)
+    
+    def clean(self):
+        """
+        Кросс-полевая валидация уникальности пары номер+дата.
+        """
+        cleaned_data = super().clean()
+        number = cleaned_data.get('number')
+        date = cleaned_data.get('date')
+        
+        # Если есть ошибки в отдельных полях, не проверяем уникальность
+        if not number or not date:
+            return cleaned_data
+        
+        # Проверяем уникальность пары номер+дата
+        if self.instance.pk:
+            # Редактирование: исключаем текущий объект
+            exists = PowerOfAttorney.objects.filter(
+                number=number,
+                date=date
+            ).exclude(pk=self.instance.pk).exists()
+        else:
+            # Создание: проверяем все записи
+            exists = PowerOfAttorney.objects.filter(
+                number=number,
+                date=date
+            ).exists()
+        
+        if exists:
+            raise forms.ValidationError(
+                'Доверенность с таким номером и датой уже существует.'
+            )
+        
+        return cleaned_data
+    
+
+
