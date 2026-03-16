@@ -179,3 +179,43 @@ class ResponsiblePerson(BaseModel):
         if self.middle_name:
             full_name += f" {self.middle_name}"
         return full_name
+
+
+class PowerOfAttorney(BaseModel):
+    """
+    Справочник доверенностей.
+    Связан с ответственным лицом (один ко многим).
+    Используется в счетах для указания лица, действующего от имени организации.
+    """
+    
+    number = models.CharField(
+        max_length=50,
+        verbose_name="Номер доверенности"
+    )
+    
+    date = models.DateField(
+        verbose_name="Дата доверенности"
+    )
+    
+    # Связь с ответственным лицом
+    responsible_person = models.ForeignKey(
+        ResponsiblePerson,
+        on_delete=models.PROTECT,  # Нельзя удалить лицо, если есть доверенности
+        related_name='powers_of_attorney',  # Доступ через person.powers_of_attorney.all()
+        verbose_name="Ответственное лицо"
+    )
+    
+    class Meta:
+        verbose_name = "Доверенность"
+        verbose_name_plural = "Доверенности"
+        ordering = ['-date', 'number']
+        unique_together = ['number', 'date']  # Уникальность пары номер+дата
+        indexes = [
+            models.Index(fields=['number']),
+            models.Index(fields=['date']),
+        ]
+    
+    def __str__(self):
+        return f"№{self.number} от {self.date.strftime('%d.%m.%Y')}"
+    
+
