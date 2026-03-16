@@ -754,20 +754,82 @@ def power_of_attorney_delete(request, pk):
 
 
 # =============================================================================
-# HTMX Partials (для модальных окон) - STUB Views
+# HTMX Partials (для модальных окон выбора)
 # =============================================================================
 
 @login_required
-def htmx_contract_search(request):
-    """Заглушка: HTMX поиск договоров"""
-    return render(request, 'directories/partials/contract_search_results.html', {})
+def htmx_counterparty_search(request):
+    """
+    HTMX поиск контрагентов для модального окна.
+    Возвращает HTML partial с результатами поиска.
+    """
+    search_query = request.GET.get('q', '')
+    
+    # Получаем контрагентов с поиском
+    counterparties = Counterparty.objects.all().order_by('name')
+    
+    if search_query:
+        counterparties = counterparties.filter(
+            Q(name__icontains=search_query) |
+            Q(inn__icontains=search_query) |
+            Q(email__icontains=search_query)
+        )[:50]  # Ограничиваем результат для производительности
+    
+    context = {
+        'counterparties': counterparties,
+        'search_query': search_query,
+    }
+    
+    # Возвращаем только partial шаблон (без base.html)
+    return render(request, 'directories/partials/counterparty_search_results.html', context)
+
 
 @login_required
-def htmx_counterparty_search(request):
-    """Заглушка: HTMX поиск контрагентов"""
-    return render(request, 'directories/partials/counterparty_search_results.html', {})
+def htmx_contract_search(request):
+    """
+    HTMX поиск договоров для модального окна.
+    Возвращает HTML partial с результатами поиска.
+    """
+    search_query = request.GET.get('q', '')
+    
+    # Получаем договоры с поиском и связанными контрагентами
+    contracts = Contract.objects.select_related('counterparty').all().order_by('-date', 'number')
+    
+    if search_query:
+        contracts = contracts.filter(
+            Q(number__icontains=search_query) |
+            Q(counterparty__name__icontains=search_query)
+        )[:50]  # Ограничиваем результат
+    
+    context = {
+        'contracts': contracts,
+        'search_query': search_query,
+    }
+    
+    return render(request, 'directories/partials/contract_search_results.html', context)
+
 
 @login_required
 def htmx_responsible_person_search(request):
-    """Заглушка: HTMX поиск ответственных лиц"""
-    return render(request, 'directories/partials/responsible_person_search_results.html', {})
+    """
+    HTMX поиск ответственных лиц для модального окна.
+    Возвращает HTML partial с результатами поиска.
+    """
+    search_query = request.GET.get('q', '')
+    
+    # Получаем ответственных лиц с поиском
+    persons = ResponsiblePerson.objects.all().order_by('last_name', 'first_name')
+    
+    if search_query:
+        persons = persons.filter(
+            Q(last_name__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(position__icontains=search_query)
+        )[:50]  # Ограничиваем результат
+    
+    context = {
+        'persons': persons,
+        'search_query': search_query,
+    }
+    
+    return render(request, 'directories/partials/responsible_person_search_results.html', context)

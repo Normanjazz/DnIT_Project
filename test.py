@@ -6,26 +6,22 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dNit_management.settings')
 django.setup()
 
 from apps.directories.views import (
-    power_of_attorney_list,
-    power_of_attorney_create,
-    power_of_attorney_detail,
-    power_of_attorney_update,
-    power_of_attorney_delete
+    htmx_counterparty_search,
+    htmx_contract_search,
+    htmx_responsible_person_search
 )
 
 print("=" * 60)
-print("✅ ПРОВЕРКА VIEW-ФУНКЦИЙ PowerOfAttorney")
+print("✅ ПРОВЕРКА HTMX VIEW-ФУНКЦИЙ")
 print("=" * 60)
 
 print("\n📋 Список функций:")
-print(f"   - power_of_attorney_list: {power_of_attorney_list.__name__}")
-print(f"   - power_of_attorney_create: {power_of_attorney_create.__name__}")
-print(f"   - power_of_attorney_detail: {power_of_attorney_detail.__name__}")
-print(f"   - power_of_attorney_update: {power_of_attorney_update.__name__}")
-print(f"   - power_of_attorney_delete: {power_of_attorney_delete.__name__}")
+print(f"   - htmx_counterparty_search: {htmx_counterparty_search.__name__}")
+print(f"   - htmx_contract_search: {htmx_contract_search.__name__}")
+print(f"   - htmx_responsible_person_search: {htmx_responsible_person_search.__name__}")
 
 print("\n🔒 Декоратор @login_required применён: True")
-print("\n✅ Все view-функции PowerOfAttorney импортированы успешно!")
+print("\n✅ Все HTMX view-функции импортированы успешно!")
 
 print("\n" + "=" * 60)
 print("🎉 ПРОВЕРКА ЗАВЕРШЕНА!")
