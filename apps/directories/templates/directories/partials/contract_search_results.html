@@ -1,0 +1,33 @@
+{# apps/directories/templates/directories/partials/contract_search_results.html #}
+{# HTMX Partial - возвращает только фрагмент HTML (без base.html) #}
+
+{% if contracts %}
+    <div class="list-group">
+        {% for contract in contracts %}
+        <a href="#" 
+           class="list-group-item list-group-item-action"
+           hx-on:click="selectContract('{{ contract.id }}', '{{ contract|escapejs }}')"
+           style="cursor: pointer;">
+            <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1">{{ contract.number }} от {{ contract.date|date:"d.m.Y" }}</h6>
+            </div>
+            <small class="text-muted">{{ contract.counterparty.name }}</small>
+        </a>
+        {% endfor %}
+    </div>
+    <div class="mt-2 text-muted small">
+        <i class="bi bi-info-circle me-1"></i>
+        Найдено: {{ contracts|length }} {% if search_query %}(по запросу "{{ search_query }}"){% endif %}
+    </div>
+{% else %}
+    <div class="text-center py-4 text-muted">
+        <i class="bi bi-inbox display-6"></i>
+        <p class="mt-2 mb-0">
+            {% if search_query %}
+                Ничего не найдено по запросу "{{ search_query }}"
+            {% else %}
+                Начните вводить для поиска
+            {% endif %}
+        </p>
+    </div>
+{% endif %}

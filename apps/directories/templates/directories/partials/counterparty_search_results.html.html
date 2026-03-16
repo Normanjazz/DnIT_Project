@@ -1,0 +1,36 @@
+{# apps/directories/templates/directories/partials/counterparty_search_results.html #}
+{# HTMX Partial - возвращает только фрагмент HTML (без base.html) #}
+
+{% if counterparties %}
+    <div class="list-group">
+        {% for counterparty in counterparties %}
+        <a href="#" 
+           class="list-group-item list-group-item-action"
+           hx-on:click="selectCounterparty('{{ counterparty.id }}', '{{ counterparty.name|escapejs }}')"
+           style="cursor: pointer;">
+            <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1">{{ counterparty.name }}</h6>
+                <small class="text-muted">ИНН: {{ counterparty.inn|default:"—" }}</small>
+            </div>
+            {% if counterparty.email %}
+            <small class="text-muted">{{ counterparty.email }}</small>
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+    <div class="mt-2 text-muted small">
+        <i class="bi bi-info-circle me-1"></i>
+        Найдено: {{ counterparties|length }} {% if search_query %}(по запросу "{{ search_query }}"){% endif %}
+    </div>
+{% else %}
+    <div class="text-center py-4 text-muted">
+        <i class="bi bi-inbox display-6"></i>
+        <p class="mt-2 mb-0">
+            {% if search_query %}
+                Ничего не найдено по запросу "{{ search_query }}"
+            {% else %}
+                Начните вводить для поиска
+            {% endif %}
+        </p>
+    </div>
+{% endif %}
