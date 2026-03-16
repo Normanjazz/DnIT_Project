@@ -12,41 +12,50 @@ if not settings.configured:
 
 # ============= от QWEN ==================
 
-from apps.directories.forms import UnitForm, WorkTypeForm
-from apps.directories.models import Unit
+from apps.directories.forms import CounterpartyForm
+from apps.directories.models import Counterparty
 
 # Проверяем, что форма импортируется
-print("✅ UnitForm импортирован успешно!")
+print("✅ CounterpartyForm импортирован успешно!")
 
 # Проверяем поля формы
-form = UnitForm()
+form = CounterpartyForm()
 print(f"\n✅ Поля формы: {list(form.fields.keys())}")
 
 # Проверяем виджеты
-print(f"\n✅ Виджет full_name: {form.fields['full_name'].widget.__class__.__name__}")
-print(f"✅ CSS класс: {form.fields['full_name'].widget.attrs.get('class')}")
-print(f"✅ Placeholder: {form.fields['full_name'].widget.attrs.get('placeholder')}")
+print(f"\n✅ Виджет name: {form.fields['name'].widget.__class__.__name__}")
+print(f"✅ Виджет email: {form.fields['email'].widget.__class__.__name__}")
+print(f"✅ Виджет address: {form.fields['address'].widget.__class__.__name__}")
 
-# Проверяем метод валидации
-print(f"\n✅ Метод clean_full_name существует: {hasattr(UnitForm, 'clean_full_name')}")
+# Проверяем методы валидации
+print(f"\n✅ Метод clean_name существует: {hasattr(CounterpartyForm, 'clean_name')}")
+print(f"✅ Метод clean_inn существует: {hasattr(CounterpartyForm, 'clean_inn')}")
+print(f"✅ Метод clean_kpp существует: {hasattr(CounterpartyForm, 'clean_kpp')}")
 
-# Проверяем, что это ModelForm
-print(f"\n✅ Является ModelForm: {issubclass(UnitForm, forms.ModelForm)}")
-print(f"✅ Класс модели в Meta: {UnitForm._meta.model.__name__}")
+# 🧪 Тестируем валидацию ИНН
+print("\n🧪 Тестируем валидацию ИНН...")
 
-# 🧪 Тестируем валидацию
-print("\n🧪 Тестируем валидацию уникальности...")
+# Тест 1: Некорректный ИНН (5 цифр)
+form_bad_inn = CounterpartyForm(data={
+    'name': 'Тест ООО',
+    'inn': '12345'
+})
+print(f"✅ Форма с ИНН '12345' валидна: {form_bad_inn.is_valid()}")
+if not form_bad_inn.is_valid():
+    print(f"✅ Ошибки: {form_bad_inn.errors.get('inn', 'Нет ошибок inn')}")
 
-# Тест 1: Пустая форма (должна быть невалидна)
-form_empty = UnitForm(data={})
-print(f"✅ Форма без данных валидна: {form_empty.is_valid()}")
-if not form_empty.is_valid():
-    print(f"✅ Ошибки валидации: {form_empty.errors}")
+# Тест 2: Корректный ИНН (10 цифр)
+form_good_inn = CounterpartyForm(data={
+    'name': 'Тест ООО 2',
+    'inn': '1234567890'
+})
+print(f"✅ Форма с ИНН '1234567890' валидна: {form_good_inn.is_valid()}")
 
-# Тест 2: Форма с данными (должна быть валидна, если нет дубликатов)
-form_valid = UnitForm(data={'full_name': 'Тестовая единица', 'short_name': 'те'})
-print(f"✅ Форма с данными валидна: {form_valid.is_valid()}")
+# Тест 3: Корректный ИНН (12 цифр)
+form_good_inn2 = CounterpartyForm(data={
+    'name': 'Тест ООО 3',
+    'inn': '123456789012'
+})
+print(f"✅ Форма с ИНН '123456789012' валидна: {form_good_inn2.is_valid()}")
 
 print("\n🎉 Все тесты выполнены!")
-
-
