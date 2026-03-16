@@ -290,3 +290,76 @@ class ContractForm(forms.ModelForm):
             )
         
         return cleaned_data
+
+
+class ResponsiblePersonForm(forms.ModelForm):
+    """
+    Форма для создания/редактирования ответственного лица.
+    Наследуется от ModelForm для автоматического создания полей.
+    """
+    
+    class Meta:
+        model = ResponsiblePerson
+        fields = ['last_name', 'first_name', 'middle_name', 'position']
+        widgets = {
+            'last_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Введите фамилию'
+            }),
+            'first_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Введите имя'
+            }),
+            'middle_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Введите отчество (при наличии)'
+            }),
+            'position': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Введите должность'
+            }),
+        }
+        labels = {
+            'last_name': 'Фамилия',
+            'first_name': 'Имя',
+            'middle_name': 'Отчество',
+            'position': 'Должность',
+        }
+    
+    def clean(self):
+        """
+        Валидация уникальности ФИО (комбинация фамилия+имя+отчество).
+        """
+        cleaned_data = super().clean()
+        last_name = cleaned_data.get('last_name')
+        first_name = cleaned_data.get('first_name')
+        middle_name = cleaned_data.get('middle_name', '')
+        
+        # Если есть ошибки в отдельных полях, не проверяем уникальность
+        if not last_name or not first_name:
+            return cleaned_data
+        
+        # Проверяем уникальность комбинации ФИО
+        if self.instance.pk:
+            # Редактирование: исключаем текущий объект
+            exists = ResponsiblePerson.objects.filter(
+                last_name__iexact=last_name,
+                first_name__iexact=first_name,
+                middle_name__iexact=middle_name
+            ).exclude(pk=self.instance.pk).exists()
+        else:
+            # Создание: проверяем все записи
+            exists = ResponsiblePerson.objects.filter(
+                last_name__iexact=last_name,
+                first_name__iexact=first_name,
+                middle_name__iexact=middle_name
+            ).exists()
+        
+        if exists:
+            raise forms.ValidationError(
+                'Ответственное лицо с таким ФИО уже существует.'
+            )
+        
+        return cleaned_data
+    
+
