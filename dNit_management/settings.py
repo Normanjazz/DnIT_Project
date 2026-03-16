@@ -20,6 +20,8 @@ import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+APPS_DIR = BASE_DIR / 'apps'
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -65,8 +67,11 @@ ROOT_URLCONF = 'dNit_management.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
+        'DIRS': [
+            BASE_DIR / 'templates',              # ✅ Глобальные шаблоны
+            APPS_DIR / 'directories' / 'templates',  # ✅ Шаблоны directories
+        ],
+        'APP_DIRS': True,                        # ✅ Важно!
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',

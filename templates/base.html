@@ -1,4 +1,4 @@
-{% load static %}
+<!-- templates/base.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -7,47 +7,43 @@
     <title>{% block title %}ДНиТ. Управление. Астрахань{% endblock %}</title>
     
     <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    
-    <!-- Кастомные стили -->
-    <link href="{% static 'css/base.css' %}" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js"></script>
     
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Навигация -->
+    <!-- Navbar -->
     {% include 'components/_navbar.html' %}
     
-    <!-- Основной контент -->
+    <!-- Messages (Toasts) -->
+    {% if messages %}
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        {% for message in messages %}
+        <div class="toast show" role="alert">
+            <div class="toast-header">
+                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                <strong class="me-auto">{{ message.tags|title }}</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body">{{ message }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- Main Content -->
     <div class="container-fluid py-4">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
-        
         {% block content %}{% endblock %}
     </div>
     
-    <!-- Уведомления (Toasts) -->
-    {% include 'components/_toast.html' %}
-    
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- HTMX -->
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <script src="{% static 'js/htmx-config.js' %}"></script>
-    
-    <!-- Alpine.js -->
-    <script src="https://unpkg.com/alpinejs@3.13.3/dist/cdn.min.js" defer></script>
-    <script src="{% static 'js/alpine-init.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     {% block extra_js %}{% endblock %}
 </body>
