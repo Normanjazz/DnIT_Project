@@ -833,3 +833,79 @@ def htmx_responsible_person_search(request):
     }
     
     return render(request, 'directories/partials/responsible_person_search_results.html', context)
+
+
+@login_required
+def htmx_power_of_attorney_search(request):
+    """
+    HTMX поиск доверенностей для модального окна.
+    Возвращает HTML partial с результатами поиска.
+    """
+    search_query = request.GET.get('q', '')
+    
+    # Получаем доверенности с поиском и связанными лицами
+    powers = PowerOfAttorney.objects.select_related('responsible_person').all().order_by('-date', 'number')
+    
+    if search_query:
+        powers = powers.filter(
+            Q(number__icontains=search_query) |
+            Q(responsible_person__last_name__icontains=search_query) |
+            Q(responsible_person__first_name__icontains=search_query)
+        )[:50]  # Ограничиваем результат для производительности
+    
+    context = {
+        'powers': powers,
+        'search_query': search_query,
+    }
+    
+    return render(request, 'directories/partials/power_of_attorney_search_results.html', context)
+
+
+@login_required
+def htmx_work_type_search(request):
+    """
+    HTMX поиск видов работ для модального окна.
+    Возвращает HTML partial с результатами поиска.
+    """
+    search_query = request.GET.get('q', '')
+    
+    # Получаем виды работ с поиском
+    work_types = WorkType.objects.all().order_by('full_name')
+    
+    if search_query:
+        work_types = work_types.filter(
+            Q(full_name__icontains=search_query) |
+            Q(short_name__icontains=search_query)
+        )[:50]  # Ограничиваем результат
+    
+    context = {
+        'work_types': work_types,
+        'search_query': search_query,
+    }
+    
+    return render(request, 'directories/partials/work_type_search_results.html', context)
+
+
+@login_required
+def htmx_unit_search(request):
+    """
+    HTMX поиск единиц измерения для модального окна.
+    Возвращает HTML partial с результатами поиска.
+    """
+    search_query = request.GET.get('q', '')
+    
+    # Получаем единицы измерения с поиском
+    units = Unit.objects.all().order_by('full_name')
+    
+    if search_query:
+        units = units.filter(
+            Q(full_name__icontains=search_query) |
+            Q(short_name__icontains=search_query)
+        )[:50]  # Ограничиваем результат
+    
+    context = {
+        'units': units,
+        'search_query': search_query,
+    }
+    
+    return render(request, 'directories/partials/unit_search_results.html', context)

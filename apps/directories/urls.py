@@ -65,4 +65,8 @@ urlpatterns = [
     path('htmx/contracts/search/', views.htmx_contract_search, name='htmx_contract_search'),
     path('htmx/counterparties/search/', views.htmx_counterparty_search, name='htmx_counterparty_search'),
     path('htmx/responsible-persons/search/', views.htmx_responsible_person_search, name='htmx_responsible_person_search'),
+    path('htmx/powers-of-attorney/search/', views.htmx_power_of_attorney_search, name='htmx_power_of_attorney_search'),
+    path('htmx/work-types/search/', views.htmx_work_type_search, name='htmx_work_type_search'),
+    path('htmx/units/search/', views.htmx_unit_search, name='htmx_unit_search'),
+    # ─────────────────────────────────────────────────────────────
 ]

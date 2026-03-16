@@ -1,0 +1,35 @@
+{# apps/directories/templates/directories/partials/unit_search_results.html #}
+{# HTMX Partial - возвращает только фрагмент HTML (без base.html) #}
+
+{% if units %}
+    <div class="list-group">
+        {% for unit in units %}
+        <a href="#" 
+           class="list-group-item list-group-item-action"
+           hx-on:click="selectUnit('{{ unit.id }}', '{{ unit|escapejs }}')"
+           style="cursor: pointer;">
+            <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1">{{ unit.full_name }}</h6>
+            </div>
+            {% if unit.short_name %}
+            <small class="text-muted">{{ unit.short_name }}</small>
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+    <div class="mt-2 text-muted small">
+        <i class="bi bi-info-circle me-1"></i>
+        Найдено: {{ units|length }} {% if search_query %}(по запросу "{{ search_query }}"){% endif %}
+    </div>
+{% else %}
+    <div class="text-center py-4 text-muted">
+        <i class="bi bi-inbox display-6"></i>
+        <p class="mt-2 mb-0">
+            {% if search_query %}
+                Ничего не найдено по запросу "{{ search_query }}"
+            {% else %}
+                Начните вводить для поиска
+            {% endif %}
+        </p>
+    </div>
+{% endif %}

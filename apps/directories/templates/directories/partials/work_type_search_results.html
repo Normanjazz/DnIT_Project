@@ -1,0 +1,35 @@
+{# apps/directories/templates/directories/partials/work_type_search_results.html #}
+{# HTMX Partial - возвращает только фрагмент HTML (без base.html) #}
+
+{% if work_types %}
+    <div class="list-group">
+        {% for work_type in work_types %}
+        <a href="#" 
+           class="list-group-item list-group-item-action"
+           hx-on:click="selectWorkType('{{ work_type.id }}', '{{ work_type.full_name|escapejs }}')"
+           style="cursor: pointer;">
+            <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1">{{ work_type.full_name }}</h6>
+            </div>
+            {% if work_type.short_name %}
+            <small class="text-muted">{{ work_type.short_name }}</small>
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+    <div class="mt-2 text-muted small">
+        <i class="bi bi-info-circle me-1"></i>
+        Найдено: {{ work_types|length }} {% if search_query %}(по запросу "{{ search_query }}"){% endif %}
+    </div>
+{% else %}
+    <div class="text-center py-4 text-muted">
+        <i class="bi bi-inbox display-6"></i>
+        <p class="mt-2 mb-0">
+            {% if search_query %}
+                Ничего не найдено по запросу "{{ search_query }}"
+            {% else %}
+                Начните вводить для поиска
+            {% endif %}
+        </p>
+    </div>
+{% endif %}
