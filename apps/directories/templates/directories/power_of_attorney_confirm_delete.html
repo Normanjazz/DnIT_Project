@@ -1,0 +1,80 @@
+{# apps/directories/templates/directories/power_of_attorney_confirm_delete.html #}
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} - ДНиТ. Управление. Астрахань{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Заголовок страницы -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="bi bi-exclamation-triangle me-2"></i>{{ page_title }}
+            </h1>
+            <nav aria-label="breadcrumb" class="mt-2">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'directories:power_of_attorney_list' %}">Доверенности</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ power.number }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Карточка подтверждения удаления -->
+    <div class="card shadow-sm border-0" style="max-width: 600px;">
+        <div class="card-header bg-danger text-white py-3">
+            <h6 class="m-0 font-weight-bold">
+                <i class="bi bi-exclamation-triangle me-2"></i>Подтверждение удаления
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning" role="alert">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Внимание!</strong> Вы собираетесь удалить доверенность. Это действие нельзя отменить.
+            </div>
+
+            <p class="mb-3">Вы действительно хотите удалить следующую доверенность?</p>
+
+            <div class="card bg-light mb-3">
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-sm-4"><strong>Организация:</strong></div>
+                        <div class="col-sm-8">
+                            {% if power.organization_type == 'GC' %}
+                                <span class="badge bg-primary">ГК</span>
+                            {% elif power.organization_type == 'CHOU' %}
+                                <span class="badge bg-success">ЧОУ</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-sm-4"><strong>Номер:</strong></div>
+                        <div class="col-sm-8">{{ power.number }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-sm-4"><strong>Дата:</strong></div>
+                        <div class="col-sm-8">{{ power.date|date:"d.m.Y" }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-4"><strong>Ответственное лицо:</strong></div>
+                        <div class="col-sm-8">{{ power.responsible_person }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'directories:power_of_attorney_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-x-lg me-1"></i>Отмена
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Удалить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

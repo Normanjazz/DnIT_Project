@@ -1,0 +1,205 @@
+{# apps/directories/templates/directories/power_of_attorney_form.html #}
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} - ДНиТ. Управление. Астрахань{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Заголовок страницы -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="bi bi-file-earmark-check me-2"></i>{{ page_title }}
+            </h1>
+            <nav aria-label="breadcrumb" class="mt-2">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'directories:power_of_attorney_list' %}">Доверенности</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ page_title }}</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a href="{% url 'directories:power_of_attorney_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Назад к списку
+            </a>
+        </div>
+    </div>
+
+    <!-- Карточка с формой -->
+    <div class="card shadow-sm border-0" style="max-width: 800px;">
+        <div class="card-header bg-white py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="bi bi-pencil-square me-2"></i>Информация о доверенности
+            </h6>
+        </div>
+        <div class="card-body">
+            <!-- Отображение ошибок формы -->
+            {% if form.errors %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-circle-fill me-2"></i>
+                <strong>Исправьте следующие ошибки:</strong>
+                <ul class="mb-0 mt-2">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                        <li>{{ field.label }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endif %}
+
+            <!-- Форма -->
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <!-- Поле: Тип организации -->
+                <div class="mb-3">
+                    <label for="{{ form.organization_type.id_for_label }}" class="form-label">
+                        {{ form.organization_type.label }} <span class="text-danger">*</span>
+                    </label>
+                    {{ form.organization_type }}
+                    {% if form.organization_type.help_text %}
+                    <small class="form-text text-muted">{{ form.organization_type.help_text }}</small>
+                    {% endif %}
+                    {% if form.organization_type.errors %}
+                    <div class="invalid-feedback d-block">{{ form.organization_type.errors.0 }}</div>
+                    {% endif %}
+                    <div class="form-text">
+                        Выберите организацию, для которой создаётся доверенность
+                    </div>
+                </div>
+
+                <!-- Поле: Номер доверенности -->
+                <div class="mb-3">
+                    <label for="{{ form.number.id_for_label }}" class="form-label">
+                        {{ form.number.label }} <span class="text-danger">*</span>
+                    </label>
+                    {{ form.number }}
+                    {% if form.number.help_text %}
+                    <small class="form-text text-muted">{{ form.number.help_text }}</small>
+                    {% endif %}
+                    {% if form.number.errors %}
+                    <div class="invalid-feedback d-block">{{ form.number.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Поле: Дата доверенности -->
+                <div class="mb-3">
+                    <label for="{{ form.date.id_for_label }}" class="form-label">
+                        {{ form.date.label }} <span class="text-danger">*</span>
+                    </label>
+                    {{ form.date }}
+                    {% if form.date.help_text %}
+                    <small class="form-text text-muted">{{ form.date.help_text }}</small>
+                    {% endif %}
+                    {% if form.date.errors %}
+                    <div class="invalid-feedback d-block">{{ form.date.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Поле: Ответственное лицо (скрытое) -->
+                {{ form.responsible_person }}
+
+                <!-- Поле: Ответственное лицо (отображение) -->
+                <div class="mb-3">
+                    <label for="{{ form.responsible_person_display.id_for_label }}" class="form-label">
+                        {{ form.responsible_person_display.label }}
+                    </label>
+                    <div class="input-group">
+                        {{ form.responsible_person_display }}
+                        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalResponsiblePerson">
+                            <i class="bi bi-search me-1"></i>Выбрать
+                        </button>
+                    </div>
+                    {% if form.responsible_person_display.errors %}
+                    <div class="invalid-feedback d-block">{{ form.responsible_person_display.errors.0 }}</div>
+                    {% endif %}
+                    <div class="form-text">
+                        Нажмите "Выбрать" для поиска ответственного лица
+                    </div>
+                </div>
+
+                <!-- Кнопки действий -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'directories:power_of_attorney_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-x-lg me-1"></i>Отмена
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для выбора ответственного лица -->
+<div class="modal fade" id="modalResponsiblePerson" tabindex="-1" aria-labelledby="modalResponsiblePersonLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalResponsiblePersonLabel">Выбор ответственного лица</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Поиск ответственных лиц -->
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="responsiblePersonSearch" placeholder="Поиск по ФИО или должности...">
+                    <button class="btn btn-outline-primary" type="button" onclick="searchResponsiblePerson()">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+                <!-- Результаты поиска -->
+                <div id="responsiblePersonResults">
+                    <p class="text-muted text-center">Начните вводить текст для поиска...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Автофокус на первом поле формы
+document.addEventListener('DOMContentLoaded', function() {
+    const firstInput = document.querySelector('input:not([type="hidden"]):not([id="responsiblePersonSearch"])');
+    if (firstInput) {
+        firstInput.focus();
+    }
+});
+
+// Поиск ответственных лиц
+function searchResponsiblePerson() {
+    const query = document.getElementById('responsiblePersonSearch').value;
+    fetch(`/directories/htmx/responsible-person/search/?q=${encodeURIComponent(query)}`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('responsiblePersonResults').innerHTML = html;
+        });
+}
+
+// Поиск по Enter
+document.getElementById('responsiblePersonSearch').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        searchResponsiblePerson();
+    }
+});
+
+// Выбор ответственного лица
+function selectResponsiblePerson(id, name) {
+    document.getElementById('responsible-person-id').value = id;
+    document.getElementById('{{ form.responsible_person_display.id_for_label }}').value = name;
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalResponsiblePerson'));
+    modal.hide();
+}
+</script>
+{% endblock %}

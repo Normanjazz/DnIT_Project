@@ -16,23 +16,28 @@ def work_type_list(request):
     Список видов работ с поиском и фильтрацией.
     """
     # Получаем все неархивированные виды работ
-    work_types = WorkType.objects.all().order_by('full_name')
-    
+    work_types = WorkType.objects.all().order_by('organization_type', 'full_name')
+
+    # Фильтрация по типу организации
+    org_type = request.GET.get('org_type', '')
+    if org_type:
+        work_types = work_types.filter(organization_type=org_type)
+
     # Поиск по полному или сокращённому наименованию
-    
-    search_query = request.GET.get('q', '') # Получает параметр поиска из URL (например, ?q=монтаж)
+    search_query = request.GET.get('q', '')
     if search_query:
         work_types = work_types.filter(
             Q(full_name__icontains=search_query) |
-            Q(short_name__icontains=search_query) # Q(field__icontains=value) - Регистронезависимый поиск по полю (монтаж = МОНТАЖ = Монтаж)
+            Q(short_name__icontains=search_query)
         )
-    
+
     context = {
         'work_types': work_types,
         'search_query': search_query,
+        'org_type': org_type,
         'page_title': 'Виды работ',
     }
-    
+
     return render(request, 'directories/work_type_list.html', context)
 
 
@@ -387,7 +392,12 @@ def contract_list(request):
     """
     # Получаем все неархивированные договоры с связанными контрагентами
     contracts = Contract.objects.select_related('counterparty').all().order_by('-date', 'number')
-    
+
+    # Фильтрация по типу организации
+    org_type = request.GET.get('org_type', '')
+    if org_type:
+        contracts = contracts.filter(organization_type=org_type)
+
     # Поиск по номеру или наименованию контрагента
     search_query = request.GET.get('q', '')
     if search_query:
@@ -395,13 +405,14 @@ def contract_list(request):
             Q(number__icontains=search_query) |
             Q(counterparty__name__icontains=search_query)
         )
-    
+
     context = {
         'contracts': contracts,
         'search_query': search_query,
+        'org_type': org_type,
         'page_title': 'Договоры',
     }
-    
+
     return render(request, 'directories/contract_list.html', context)
 
 
@@ -634,7 +645,12 @@ def power_of_attorney_list(request):
     """
     # Получаем все неархивированные доверенности с связанными лицами
     powers = PowerOfAttorney.objects.select_related('responsible_person').all().order_by('-date', 'number')
-    
+
+    # Фильтрация по типу организации
+    org_type = request.GET.get('org_type', '')
+    if org_type:
+        powers = powers.filter(organization_type=org_type)
+
     # Поиск по номеру или ФИО ответственного лица
     search_query = request.GET.get('q', '')
     if search_query:
@@ -643,13 +659,14 @@ def power_of_attorney_list(request):
             Q(responsible_person__last_name__icontains=search_query) |
             Q(responsible_person__first_name__icontains=search_query)
         )
-    
+
     context = {
         'powers': powers,
         'search_query': search_query,
+        'org_type': org_type,
         'page_title': 'Доверенности',
     }
-    
+
     return render(request, 'directories/power_of_attorney_list.html', context)
 
 
@@ -791,21 +808,27 @@ def htmx_contract_search(request):
     Возвращает HTML partial с результатами поиска.
     """
     search_query = request.GET.get('q', '')
-    
+    org_type = request.GET.get('org_type', '')
+
     # Получаем договоры с поиском и связанными контрагентами
     contracts = Contract.objects.select_related('counterparty').all().order_by('-date', 'number')
-    
+
+    # Фильтрация по организации
+    if org_type:
+        contracts = contracts.filter(organization_type=org_type)
+
     if search_query:
         contracts = contracts.filter(
             Q(number__icontains=search_query) |
             Q(counterparty__name__icontains=search_query)
         )[:50]  # Ограничиваем результат
-    
+
     context = {
         'contracts': contracts,
         'search_query': search_query,
+        'org_type': org_type,
     }
-    
+
     return render(request, 'directories/partials/contract_search_results.html', context)
 
 
@@ -842,22 +865,28 @@ def htmx_power_of_attorney_search(request):
     Возвращает HTML partial с результатами поиска.
     """
     search_query = request.GET.get('q', '')
-    
+    org_type = request.GET.get('org_type', '')
+
     # Получаем доверенности с поиском и связанными лицами
     powers = PowerOfAttorney.objects.select_related('responsible_person').all().order_by('-date', 'number')
-    
+
+    # Фильтрация по организации
+    if org_type:
+        powers = powers.filter(organization_type=org_type)
+
     if search_query:
         powers = powers.filter(
             Q(number__icontains=search_query) |
             Q(responsible_person__last_name__icontains=search_query) |
             Q(responsible_person__first_name__icontains=search_query)
         )[:50]  # Ограничиваем результат для производительности
-    
+
     context = {
         'powers': powers,
         'search_query': search_query,
+        'org_type': org_type,
     }
-    
+
     return render(request, 'directories/partials/power_of_attorney_search_results.html', context)
 
 
@@ -868,21 +897,27 @@ def htmx_work_type_search(request):
     Возвращает HTML partial с результатами поиска.
     """
     search_query = request.GET.get('q', '')
-    
+    org_type = request.GET.get('org_type', '')
+
     # Получаем виды работ с поиском
     work_types = WorkType.objects.all().order_by('full_name')
-    
+
+    # Фильтрация по организации
+    if org_type:
+        work_types = work_types.filter(organization_type=org_type)
+
     if search_query:
         work_types = work_types.filter(
             Q(full_name__icontains=search_query) |
             Q(short_name__icontains=search_query)
         )[:50]  # Ограничиваем результат
-    
+
     context = {
         'work_types': work_types,
         'search_query': search_query,
+        'org_type': org_type,
     }
-    
+
     return render(request, 'directories/partials/work_type_search_results.html', context)
 
 

@@ -1,7 +1,7 @@
-{# apps/directories/templates/directories/work_type_list.html #}
+{# apps/directories/templates/directories/power_of_attorney_list.html #}
 {% extends 'base.html' %}
 
-{% block title %}Виды работ - ДНиТ. Управление. Астрахань{% endblock %}
+{% block title %}Доверенности - ДНиТ. Управление. Астрахань{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -9,19 +9,19 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h3 mb-0 text-gray-800">
-                <i class="bi bi-tools me-2"></i>{{ page_title }}
+                <i class="bi bi-file-earmark-check me-2"></i>{{ page_title }}
             </h1>
             <nav aria-label="breadcrumb" class="mt-2">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="/">Главная</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'directories:work_type_list' %}">Справочники</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Виды работ</li>
+                    <li class="breadcrumb-item"><a href="{% url 'directories:power_of_attorney_list' %}">Справочники</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Доверенности</li>
                 </ol>
             </nav>
         </div>
         <div>
-            <a href="{% url 'directories:work_type_create' %}" class="btn btn-primary">
-                <i class="bi bi-plus-lg me-1"></i>Создать вид работ
+            <a href="{% url 'directories:power_of_attorney_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Создать доверенность
             </a>
         </div>
     </div>
@@ -32,7 +32,7 @@
             <div class="row align-items-center">
                 <div class="col">
                     <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="bi bi-list-ul me-2"></i>Список видов работ
+                        <i class="bi bi-list-ul me-2"></i>Список доверенностей
                     </h6>
                 </div>
                 <div class="col-auto">
@@ -52,7 +52,7 @@
                         </a>
                     </div>
                     <!-- Форма поиска -->
-                    <form method="get" class="d-flex" action="{% url 'directories:work_type_list' %}">
+                    <form method="get" class="d-flex" action="{% url 'directories:power_of_attorney_list' %}">
                         {% if org_type %}
                         <input type="hidden" name="org_type" value="{{ org_type }}">
                         {% endif %}
@@ -60,15 +60,15 @@
                             type="text"
                             name="q"
                             class="form-control form-control-sm me-2"
-                            placeholder="Поиск..."
+                            placeholder="Поиск по номеру или ФИО..."
                             value="{{ search_query }}"
-                            style="width: 250px;"
+                            style="width: 300px;"
                         >
                         <button type="submit" class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-search"></i>
                         </button>
                         {% if search_query or org_type %}
-                        <a href="{% url 'directories:work_type_list' %}" class="btn btn-outline-secondary btn-sm ms-2">
+                        <a href="{% url 'directories:power_of_attorney_list' %}" class="btn btn-outline-secondary btn-sm ms-2">
                             <i class="bi bi-x-lg"></i>
                         </a>
                         {% endif %}
@@ -82,47 +82,44 @@
                     <thead class="table-light">
                         <tr>
                             <th style="width: 50px;" class="text-center">#</th>
-                            <th style="width: 15%;">Организация</th>
-                            <th style="width: 50%;">Полное наименование</th>
-                            <th style="width: 25%;">Сокращённое наименование</th>
+                            <th style="width: 12%;">Организация</th>
+                            <th style="width: 15%;">Номер</th>
+                            <th style="width: 15%;">Дата</th>
+                            <th style="width: 38%;">Ответственное лицо</th>
                             <th style="width: 15%;" class="text-end">Действия</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% if work_types %}
-                            {% for work_type in work_types %}
-                            <tr class="{% if work_type.is_archived %}table-secondary text-muted{% endif %}">
+                        {% if powers %}
+                            {% for power in powers %}
+                            <tr class="{% if power.is_archived %}table-secondary text-muted{% endif %}">
                                 <td class="text-center">{{ forloop.counter }}</td>
                                 <td>
-                                    {% if work_type.organization_type == 'GC' %}
+                                    {% if power.organization_type == 'GC' %}
                                         <span class="badge bg-primary">ГК</span>
-                                    {% elif work_type.organization_type == 'CHOU' %}
+                                    {% elif power.organization_type == 'CHOU' %}
                                         <span class="badge bg-success">ЧОУ</span>
                                     {% else %}
                                         <span class="badge bg-secondary">—</span>
                                     {% endif %}
                                 </td>
-                                <td>
-                                    {% if work_type.is_archived %}
-                                        <i class="bi bi-archive me-2"></i>
-                                    {% endif %}
-                                    {{ work_type.full_name }}
-                                </td>
-                                <td>{{ work_type.short_name|default:"—" }}</td>
+                                <td>{{ power.number }}</td>
+                                <td>{{ power.date|date:"d.m.Y" }}</td>
+                                <td>{{ power.responsible_person }}</td>
                                 <td class="text-end">
                                     <div class="btn-group btn-group-sm" role="group">
-                                        <a href="{% url 'directories:work_type_detail' work_type.pk %}" 
-                                           class="btn btn-outline-info" 
+                                        <a href="{% url 'directories:power_of_attorney_detail' power.pk %}"
+                                           class="btn btn-outline-info"
                                            title="Просмотр">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a href="{% url 'directories:work_type_update' work_type.pk %}" 
-                                           class="btn btn-outline-primary" 
+                                        <a href="{% url 'directories:power_of_attorney_update' power.pk %}"
+                                           class="btn btn-outline-primary"
                                            title="Редактировать">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <a href="{% url 'directories:work_type_delete' work_type.pk %}" 
-                                           class="btn btn-outline-danger" 
+                                        <a href="{% url 'directories:power_of_attorney_delete' power.pk %}"
+                                           class="btn btn-outline-danger"
                                            title="Удалить">
                                             <i class="bi bi-trash"></i>
                                         </a>
@@ -132,17 +129,17 @@
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="5" class="text-center py-5">
+                                <td colspan="6" class="text-center py-5">
                                     <i class="bi bi-inbox display-4 text-muted"></i>
                                     <p class="text-muted mt-3">
                                         {% if search_query or org_type %}
                                             Ничего не найдено{% if search_query %} по запросу "{{ search_query }}"{% endif %}{% if org_type %} (фильтр: {% if org_type == 'GC' %}ГК{% elif org_type == 'CHOU' %}ЧОУ{% endif %}){% endif %}
                                         {% else %}
-                                            Список видов работ пуст
+                                            Список доверенностей пуст
                                         {% endif %}
                                     </p>
                                     {% if search_query or org_type %}
-                                    <a href="{% url 'directories:work_type_list' %}" class="btn btn-outline-primary btn-sm">
+                                    <a href="{% url 'directories:power_of_attorney_list' %}" class="btn btn-outline-primary btn-sm">
                                         Показать все
                                     </a>
                                     {% endif %}
@@ -150,12 +147,12 @@
                             </tr>
                         {% endif %}
                     </tbody>
-                    {% if work_types %}
+                    {% if powers %}
                     <tfoot class="table-light">
                         <tr>
-                            <td colspan="5" class="text-muted small">
+                            <td colspan="6" class="text-muted small">
                                 <i class="bi bi-info-circle me-1"></i>
-                                Всего записей: {{ work_types|length }}
+                                Всего записей: {{ powers|length }}
                                 {% if search_query %}
                                     (найдено по запросу "{{ search_query }}")
                                 {% endif %}

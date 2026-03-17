@@ -4,25 +4,42 @@ from apps.core.models import BaseModel
 
 class WorkType(BaseModel):
     """
-    Справочник видов работ.    
+    Справочник видов работ.
     """
-    
+
+    # ВЫБОР ОРГАНИЗАЦИИ
+    ORGANIZATION_TYPE_CHOICES = [
+        ('GC', 'ГК (Группа компаний)'),
+        ('CHOU', 'ЧОУ (Частное образовательное учреждение)'),
+    ]
+
+    # ПОЛЕ ТИПА ОРГАНИЗАЦИИ
+    organization_type = models.CharField(
+        max_length=10,
+        choices=ORGANIZATION_TYPE_CHOICES,
+        verbose_name="Тип организации"
+    )
+
     full_name = models.CharField(
         max_length=500,
         verbose_name="Полное наименование"
     )
-    
+
     short_name = models.CharField(
         max_length=100,
         blank=True,
         verbose_name="Сокращённое наименование"
     )
-    
+
     class Meta:
         verbose_name = "Вид работ"
         verbose_name_plural = "Виды работ"
-        ordering = ['full_name']
-    
+        ordering = ['organization_type', 'full_name']
+        indexes = [
+            models.Index(fields=['organization_type']),
+            models.Index(fields=['full_name']),
+        ]
+
     def __str__(self):
         return self.full_name
     
@@ -107,10 +124,23 @@ class Contract(BaseModel):
     Справочник договоров. Связан с контрагентом (один ко многим).
     """
 
+    # ВЫБОР ОРГАНИЗАЦИИ
+    ORGANIZATION_TYPE_CHOICES = [
+        ('GC', 'ГК (Группа компаний)'),
+        ('CHOU', 'ЧОУ (Частное образовательное учреждение)'),
+    ]
+
+    # ПОЛЕ ТИПА ОРГАНИЗАЦИИ
+    organization_type = models.CharField(
+        max_length=10,
+        choices=ORGANIZATION_TYPE_CHOICES,
+        verbose_name="Тип организации"
+    )
+
     number = models.CharField(
         max_length=50,
         verbose_name="Номер договора"
-    )    
+    )
 
     date = models.DateField(
         verbose_name="Дата договора"
@@ -123,17 +153,18 @@ class Contract(BaseModel):
         related_name='contracts',  # Доступ через counterparty.contracts.all()
         verbose_name="Контрагент"
     )
-    
+
     class Meta:
         verbose_name = "Договор"
         verbose_name_plural = "Договоры"
-        ordering = ['-date', ]
-        unique_together = ['number', 'date']  # Уникальность пары номер+дата
+        ordering = ['-date', 'number']
+        unique_together = ['organization_type', 'number', 'date']  # Уникальность пары номер+дата + организация
         indexes = [
+            models.Index(fields=['organization_type']),
             models.Index(fields=['number']),
             models.Index(fields=['date']),
         ]
-    
+
     def __str__(self):
         return f"{self.number} от {self.date.strftime('%d.%m.%Y')}"
     
@@ -187,16 +218,29 @@ class PowerOfAttorney(BaseModel):
     Связан с ответственным лицом (один ко многим).
     Используется в счетах для указания лица, действующего от имени организации.
     """
-    
+
+    # ВЫБОР ОРГАНИЗАЦИИ
+    ORGANIZATION_TYPE_CHOICES = [
+        ('GC', 'ГК (Группа компаний)'),
+        ('CHOU', 'ЧОУ (Частное образовательное учреждение)'),
+    ]
+
+    # ПОЛЕ ТИПА ОРГАНИЗАЦИИ
+    organization_type = models.CharField(
+        max_length=10,
+        choices=ORGANIZATION_TYPE_CHOICES,
+        verbose_name="Тип организации"
+    )
+
     number = models.CharField(
         max_length=50,
         verbose_name="Номер доверенности"
     )
-    
+
     date = models.DateField(
         verbose_name="Дата доверенности"
     )
-    
+
     # Связь с ответственным лицом
     responsible_person = models.ForeignKey(
         ResponsiblePerson,
@@ -204,17 +248,18 @@ class PowerOfAttorney(BaseModel):
         related_name='powers_of_attorney',  # Доступ через person.powers_of_attorney.all()
         verbose_name="Ответственное лицо"
     )
-    
+
     class Meta:
         verbose_name = "Доверенность"
         verbose_name_plural = "Доверенности"
         ordering = ['-date', 'number']
-        unique_together = ['number', 'date']  # Уникальность пары номер+дата
+        unique_together = ['organization_type', 'number', 'date']  # Уникальность пары номер+дата + организация
         indexes = [
+            models.Index(fields=['organization_type']),
             models.Index(fields=['number']),
             models.Index(fields=['date']),
         ]
-    
+
     def __str__(self):
         return f"№{self.number} от {self.date.strftime('%d.%m.%Y')}"
     

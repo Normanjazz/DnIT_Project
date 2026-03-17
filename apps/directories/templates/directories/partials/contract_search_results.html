@@ -4,14 +4,23 @@
 {% if contracts %}
     <div class="list-group">
         {% for contract in contracts %}
-        <a href="#" 
+        <a href="#"
            class="list-group-item list-group-item-action"
            hx-on:click="selectContract('{{ contract.id }}', '{{ contract|escapejs }}')"
            style="cursor: pointer;">
-            <div class="d-flex w-100 justify-content-between">
-                <h6 class="mb-1">{{ contract.number }} от {{ contract.date|date:"d.m.Y" }}</h6>
+            <div class="d-flex w-100 justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-1">{{ contract.number }} от {{ contract.date|date:"d.m.Y" }}</h6>
+                    <small class="text-muted">{{ contract.counterparty.name }}</small>
+                </div>
+                <div>
+                    {% if contract.organization_type == 'GC' %}
+                        <span class="badge bg-primary">ГК</span>
+                    {% elif contract.organization_type == 'CHOU' %}
+                        <span class="badge bg-success">ЧОУ</span>
+                    {% endif %}
+                </div>
             </div>
-            <small class="text-muted">{{ contract.counterparty.name }}</small>
         </a>
         {% endfor %}
     </div>

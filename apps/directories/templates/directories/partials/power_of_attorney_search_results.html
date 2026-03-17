@@ -4,14 +4,23 @@
 {% if powers %}
     <div class="list-group">
         {% for power in powers %}
-        <a href="#" 
+        <a href="#"
            class="list-group-item list-group-item-action"
            hx-on:click="selectPowerOfAttorney('{{ power.id }}', '{{ power|escapejs }}')"
            style="cursor: pointer;">
-            <div class="d-flex w-100 justify-content-between">
-                <h6 class="mb-1">{{ power.number }} от {{ power.date|date:"d.m.Y" }}</h6>
+            <div class="d-flex w-100 justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-1">{{ power.number }} от {{ power.date|date:"d.m.Y" }}</h6>
+                    <small class="text-muted">{{ power.responsible_person }}</small>
+                </div>
+                <div>
+                    {% if power.organization_type == 'GC' %}
+                        <span class="badge bg-primary">ГК</span>
+                    {% elif power.organization_type == 'CHOU' %}
+                        <span class="badge bg-success">ЧОУ</span>
+                    {% endif %}
+                </div>
             </div>
-            <small class="text-muted">{{ power.responsible_person }}</small>
         </a>
         {% endfor %}
     </div>

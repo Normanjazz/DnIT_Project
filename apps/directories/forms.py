@@ -8,10 +8,18 @@ class WorkTypeForm(forms.ModelForm):
     Форма для создания/редактирования вида работ.
     Наследуется от ModelForm для автоматического создания полей.
     """
-    
+
+    # ПОЛЕ ТИПА ОРГАНИЗАЦИИ (вручную, без default)
+    organization_type = forms.ChoiceField(
+        choices=WorkType.ORGANIZATION_TYPE_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label="Тип организации",
+        required=True
+    )
+
     class Meta:
         model = WorkType
-        fields = ['full_name', 'short_name']  # Поля, которые будут в форме
+        fields = ['organization_type', 'full_name', 'short_name']  # Поля, которые будут в форме
         widgets = {
             'full_name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -26,30 +34,44 @@ class WorkTypeForm(forms.ModelForm):
             'full_name': 'Полное наименование',
             'short_name': 'Сокращённое наименование',
         }
-    
+
+    def __init__(self, *args, **kwargs):
+        """
+        Инициализация формы.
+        """
+        super().__init__(*args, **kwargs)
+
+        # Если редактируем существующий объект, устанавливаем текущее значение
+        if self.instance.pk and self.instance.organization_type:
+            self.fields['organization_type'].initial = self.instance.organization_type
+
     def clean_full_name(self):
         """
-        Валидация уникальности полного наименования.
-        Проверяет, что нет другого вида работ с таким же именем.
+        Валидация уникальности полного наименования с учётом организации.
         """
         full_name = self.cleaned_data.get('full_name')
-        
-        # Если редактируем существующий объект, исключаем его из проверки
-        # __iexact - Регистронезависимое сравнение строк (Работ = РАБОТ)
+        organization_type = self.cleaned_data.get('organization_type')
+
+        if not full_name or not organization_type:
+            return full_name
+
         if self.instance.pk:
             exists = WorkType.objects.filter(
-                full_name__iexact=full_name
+                full_name__iexact=full_name,
+                organization_type=organization_type
             ).exclude(pk=self.instance.pk).exists()
         else:
-            # Если создаём новый, проверяем все записи
             exists = WorkType.objects.filter(
-                full_name__iexact=full_name
+                full_name__iexact=full_name,
+                organization_type=organization_type
             ).exists()
-        
+
         if exists:
-            # ValidationError - Ошибка валидации, которая отображается пользователю
-            raise forms.ValidationError('Вид работ с таким наименованием уже существует.')
-        
+            org_display = dict(WorkType.ORGANIZATION_TYPE_CHOICES)[organization_type]
+            raise forms.ValidationError(
+                f'Вид работ с таким наименованием уже существует для {org_display}.'
+            )
+
         return full_name
     
 
@@ -208,11 +230,19 @@ class ContractForm(forms.ModelForm):
     """
     Форма для создания/редактирования договора.
     Наследуется от ModelForm для автоматического создания полей.
-    
+
     ВАЖНО: Counterparty выбирается через модальное окно (HTMX),
     а не через стандартный Select.
     """
-    
+
+    # ПОЛЕ ТИПА ОРГАНИЗАЦИИ (вручную, без default)
+    organization_type = forms.ChoiceField(
+        choices=Contract.ORGANIZATION_TYPE_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label="Тип организации",
+        required=True
+    )
+
     # Поле для отображения названия контрагента (readonly)
     counterparty_display = forms.CharField(
         required=False,
@@ -223,10 +253,10 @@ class ContractForm(forms.ModelForm):
         }),
         label="Контрагент"
     )
-    
+
     class Meta:
         model = Contract
-        fields = ['number', 'date', 'counterparty']  # counterparty - скрытое поле
+        fields = ['organization_type', 'number', 'date', 'counterparty']  # counterparty - скрытое поле
         widgets = {
             'number': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -246,49 +276,58 @@ class ContractForm(forms.ModelForm):
             'date': 'Дата договора',
             'counterparty': 'Контрагент',
         }
-    
+
     def __init__(self, *args, **kwargs):
         """
         Инициализация формы.
         Заполняем counterparty_display текущим значением при редактировании.
         """
         super().__init__(*args, **kwargs)
-        
+
         # Если редактируем существующий объект, заполняем отображаемое поле
         if self.instance.pk and self.instance.counterparty:
             self.fields['counterparty_display'].initial = self.instance.counterparty.name
-    
+
+        # Если редактируем существующий объект, устанавливаем текущее значение organization_type
+        if self.instance.pk and self.instance.organization_type:
+            self.fields['organization_type'].initial = self.instance.organization_type
+
     def clean(self):
         """
-        Кросс-полевая валидация уникальности пары номер+дата.
+        Кросс-полевая валидация уникальности пары номер+дата + организация.
         """
         cleaned_data = super().clean()
+        organization_type = cleaned_data.get('organization_type')
         number = cleaned_data.get('number')
         date = cleaned_data.get('date')
-        
+
         # Если есть ошибки в отдельных полях, не проверяем уникальность
-        if not number or not date:
+        if not organization_type or not number or not date:
             return cleaned_data
-        
-        # Проверяем уникальность пары номер+дата
+
+        # Проверяем уникальность с учётом организации
         if self.instance.pk:
             # Редактирование: исключаем текущий объект
             exists = Contract.objects.filter(
+                organization_type=organization_type,
                 number=number,
                 date=date
             ).exclude(pk=self.instance.pk).exists()
         else:
             # Создание: проверяем все записи
             exists = Contract.objects.filter(
+                organization_type=organization_type,
                 number=number,
                 date=date
             ).exists()
-        
+
         if exists:
+            org_display = dict(Contract.ORGANIZATION_TYPE_CHOICES)[organization_type]
             raise forms.ValidationError(
-                'Договор с таким номером и датой уже существует.'
+                f'Договор с номером "{number}" от {date.strftime("%d.%m.%Y")} '
+                f'уже существует для {org_display}.'
             )
-        
+
         return cleaned_data
 
 
@@ -367,11 +406,19 @@ class PowerOfAttorneyForm(forms.ModelForm):
     """
     Форма для создания/редактирования доверенности.
     Наследуется от ModelForm для автоматического создания полей.
-    
+
     ВАЖНО: ResponsiblePerson выбирается через модальное окно (HTMX),
     а не через стандартный Select.
     """
-    
+
+    # ПОЛЕ ТИПА ОРГАНИЗАЦИИ (вручную, без default)
+    organization_type = forms.ChoiceField(
+        choices=PowerOfAttorney.ORGANIZATION_TYPE_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label="Тип организации",
+        required=True
+    )
+
     # Поле для отображения ФИО ответственного лица (readonly)
     responsible_person_display = forms.CharField(
         required=False,
@@ -382,10 +429,10 @@ class PowerOfAttorneyForm(forms.ModelForm):
         }),
         label="Ответственное лицо"
     )
-    
+
     class Meta:
         model = PowerOfAttorney
-        fields = ['number', 'date', 'responsible_person']  # responsible_person - скрытое поле
+        fields = ['organization_type', 'number', 'date', 'responsible_person']  # responsible_person - скрытое поле
         widgets = {
             'number': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -405,49 +452,58 @@ class PowerOfAttorneyForm(forms.ModelForm):
             'date': 'Дата доверенности',
             'responsible_person': 'Ответственное лицо',
         }
-    
+
     def __init__(self, *args, **kwargs):
         """
         Инициализация формы.
         Заполняем responsible_person_display текущим значением при редактировании.
         """
         super().__init__(*args, **kwargs)
-        
+
         # Если редактируем существующий объект, заполняем отображаемое поле
         if self.instance.pk and self.instance.responsible_person:
             self.fields['responsible_person_display'].initial = str(self.instance.responsible_person)
-    
+
+        # Если редактируем существующий объект, устанавливаем текущее значение organization_type
+        if self.instance.pk and self.instance.organization_type:
+            self.fields['organization_type'].initial = self.instance.organization_type
+
     def clean(self):
         """
-        Кросс-полевая валидация уникальности пары номер+дата.
+        Кросс-полевая валидация уникальности пары номер+дата + организация.
         """
         cleaned_data = super().clean()
+        organization_type = cleaned_data.get('organization_type')
         number = cleaned_data.get('number')
         date = cleaned_data.get('date')
-        
+
         # Если есть ошибки в отдельных полях, не проверяем уникальность
-        if not number or not date:
+        if not organization_type or not number or not date:
             return cleaned_data
-        
-        # Проверяем уникальность пары номер+дата
+
+        # Проверяем уникальность с учётом организации
         if self.instance.pk:
             # Редактирование: исключаем текущий объект
             exists = PowerOfAttorney.objects.filter(
+                organization_type=organization_type,
                 number=number,
                 date=date
             ).exclude(pk=self.instance.pk).exists()
         else:
             # Создание: проверяем все записи
             exists = PowerOfAttorney.objects.filter(
+                organization_type=organization_type,
                 number=number,
                 date=date
             ).exists()
-        
+
         if exists:
+            org_display = dict(PowerOfAttorney.ORGANIZATION_TYPE_CHOICES)[organization_type]
             raise forms.ValidationError(
-                'Доверенность с таким номером и датой уже существует.'
+                f'Доверенность с номером "{number}" от {date.strftime("%d.%m.%Y")} '
+                f'уже существует для {org_display}.'
             )
-        
+
         return cleaned_data
     
 

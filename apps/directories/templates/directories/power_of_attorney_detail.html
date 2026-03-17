@@ -1,0 +1,116 @@
+{# apps/directories/templates/directories/power_of_attorney_detail.html #}
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} - ДНиТ. Управление. Астрахань{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Заголовок страницы -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="bi bi-file-earmark-check me-2"></i>{{ page_title }}
+            </h1>
+            <nav aria-label="breadcrumb" class="mt-2">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'directories:power_of_attorney_list' %}">Доверенности</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ power.number }}</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a href="{% url 'directories:power_of_attorney_update' power.pk %}" class="btn btn-primary">
+                <i class="bi bi-pencil me-1"></i>Редактировать
+            </a>
+            <a href="{% url 'directories:power_of_attorney_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Назад к списку
+            </a>
+        </div>
+    </div>
+
+    <!-- Карточка с информацией о доверенности -->
+    <div class="card shadow-sm border-0" style="max-width: 800px;">
+        <div class="card-header bg-white py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="bi bi-info-circle me-2"></i>Информация о доверенности
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-sm-4">
+                    <strong>Организация:</strong>
+                </div>
+                <div class="col-sm-8">
+                    {% if power.organization_type == 'GC' %}
+                        <span class="badge bg-primary">ГК (Группа компаний)</span>
+                    {% elif power.organization_type == 'CHOU' %}
+                        <span class="badge bg-success">ЧОУ (Частное образовательное учреждение)</span>
+                    {% else %}
+                        <span class="badge bg-secondary">—</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-sm-4">
+                    <strong>Номер доверенности:</strong>
+                </div>
+                <div class="col-sm-8">{{ power.number }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-sm-4">
+                    <strong>Дата доверенности:</strong>
+                </div>
+                <div class="col-sm-8">{{ power.date|date:"d.m.Y" }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-sm-4">
+                    <strong>Ответственное лицо:</strong>
+                </div>
+                <div class="col-sm-8">
+                    <a href="{% url 'directories:responsible_person_detail' power.responsible_person.pk %}">
+                        {{ power.responsible_person }}
+                    </a>
+                </div>
+            </div>
+            {% if power.responsible_person.position %}
+            <div class="row mb-3">
+                <div class="col-sm-4">
+                    <strong>Должность:</strong>
+                </div>
+                <div class="col-sm-8">{{ power.responsible_person.position }}</div>
+            </div>
+            {% endif %}
+            <hr>
+            <div class="row mb-3">
+                <div class="col-sm-4">
+                    <strong>Создана:</strong>
+                </div>
+                <div class="col-sm-8">{{ power.created_at|date:"d.m.Y H:i" }}{% if power.created_by %} ({{ power.created_by.username }}){% endif %}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-sm-4">
+                    <strong>Изменена:</strong>
+                </div>
+                <div class="col-sm-8">{{ power.updated_at|date:"d.m.Y H:i" }}{% if power.updated_by %} ({{ power.updated_by.username }}){% endif %}</div>
+            </div>
+            {% if power.is_archived %}
+            <div class="alert alert-warning mt-3" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <strong>Архивирована</strong> — эта доверенность была удалена
+            </div>
+            {% endif %}
+        </div>
+        <div class="card-footer bg-white py-3">
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'directories:power_of_attorney_update' power.pk %}" class="btn btn-primary">
+                    <i class="bi bi-pencil me-1"></i>Редактировать
+                </a>
+                <a href="{% url 'directories:power_of_attorney_delete' power.pk %}" class="btn btn-danger">
+                    <i class="bi bi-trash me-1"></i>Удалить
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
